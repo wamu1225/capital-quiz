@@ -1,5 +1,6 @@
 // scripts/validate-data.ts — countries.ts のデータ整合性を機械チェックする。
 import { countries } from '../src/data/countries';
+import { triviaExplanations } from '../src/data/trivia';
 
 const errors: string[] = [];
 
@@ -28,6 +29,19 @@ for (const c of countries) {
   if (!c.includeInQuiz && c.capital !== '記載なし') {
     // 除外理由が capital 欠落以外のケースもあり得るため warning 相当（許容）
   }
+}
+
+// specialType付きの国は全てtrivia解説を持つべき
+for (const c of countries) {
+  if (c.specialType && !triviaExplanations[c.id]) {
+    errors.push(`specialTypeがあるのにtrivia解説が無い: ${c.id}`);
+  }
+}
+// trivia解説があるのにcountries側にspecialTypeが無い＝孤立データ
+for (const id of Object.keys(triviaExplanations)) {
+  const c = countries.find((x) => x.id === id);
+  if (!c) errors.push(`trivia解説のidがcountriesに存在しない: ${id}`);
+  else if (!c.specialType) errors.push(`trivia解説はあるがspecialTypeが無い: ${id}`);
 }
 
 const quizCount = countries.filter((c) => c.includeInQuiz).length;

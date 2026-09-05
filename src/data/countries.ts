@@ -1,4 +1,4 @@
-// src/data/countries.ts — 世界の国・地域と首都のSSOT。
+// src/data/countries.ts：世界の国と地域、その首都のSSOT。
 // 出典：外務省（mofa.go.jp）各国基礎データページ。WebFetch/curlともbot対策で403のため、
 // WebSearch（site:mofa.go.jp）による間接確認＋日本語版Wikipedia「首都の一覧」との突合で全件検証。
 // 検証で見つかった誤記6件（Gemini原文からの訂正）: reports/capital-quiz.md ②検証ログ参照。
@@ -16,7 +16,7 @@ export const REGION_LABELS: Record<Region, string> = {
 };
 
 export type SpecialType = 'typeA' | 'typeB' | 'typeC' | null;
-// typeA=憲法上の首都と政府所在地の乖離／typeB=国際的な承認・帰属を巡る外交的解釈／typeC=遷都・改称の史的経緯
+// typeA=憲法上の首都と政府所在地の乖離／typeB=国際的な承認や帰属を巡る外交的解釈／typeC=遷都や改称の史的経緯
 
 export interface Country {
   id: string;
@@ -202,7 +202,7 @@ export const countries: Country[] = [
     commonName: 'セントクリストファー・ネービス',
     officialName: 'セントクリストファー・ネービス',
     capital: 'バセテール',
-    note: '①訂正済・原文は誤記「バステーブル」',
+    note: '①訂正済。原文は誤記「バステーブル」',
     specialType: null,
     includeInQuiz: true,
     mofaUrl: 'https://www.mofa.go.jp/mofaj/area/scn/index.html',
@@ -1335,7 +1335,7 @@ export const countries: Country[] = [
     commonName: 'タンザニア',
     officialName: 'タンザニア連合共和国',
     capital: 'ドドマ',
-    note: '法律上の首都・国会議事堂所在地。経済中心はダルエスサラーム',
+    note: '法律上の首都で国会議事堂の所在地。経済の中心はダルエスサラーム',
     specialType: 'typeA',
     includeInQuiz: true,
     mofaUrl: 'https://www.mofa.go.jp/mofaj/area/tanzania/index.html',
@@ -1500,7 +1500,7 @@ export const countries: Country[] = [
     commonName: '南アフリカ',
     officialName: '南アフリカ共和国',
     capital: 'プレトリア',
-    note: '立法府はケープタウン・司法府はブルームフォンテーン',
+    note: '立法府はケープタウン、司法府はブルームフォンテーン',
     specialType: 'typeA',
     includeInQuiz: true,
     mofaUrl: 'https://www.mofa.go.jp/mofaj/area/s_africa/index.html',
@@ -1929,7 +1929,7 @@ export const countries: Country[] = [
     commonName: 'ブータン',
     officialName: 'ブータン王国',
     capital: 'ティンプー',
-    note: '①訂正済・原文は誤記「ティンユー」',
+    note: '①訂正済。原文は誤記「ティンユー」',
     specialType: null,
     includeInQuiz: true,
     mofaUrl: 'https://www.mofa.go.jp/mofaj/area/bhutan/index.html',
