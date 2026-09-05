@@ -1,0 +1,65 @@
+# ビルド出力・依存
+node_modules
+dist
+dist-ssr
+*.local
+.env
+
+# ログ・エディタ
+*.log
+npm-debug.log*
+lint_out.json
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.bak
+
+# テスト出力
+test-results/
+playwright-report/
+
+# 内部リサーチノート（公開しない）
+docs/gemini-*.md
+docs/research-*.md
+docs/syllabus.md
+docs/ROADMAP.md
+docs/DESIGN.md
+CONTENT_GUIDE.md
+docs/CONTENT_GUIDE.md
+
+# 一回限りの作業スクリプト（公開しない）
+scripts/analyze-*
+scripts/audit_*
+scripts/check_*
+scripts/debug-*
+scripts/extract_*
+scripts/find_*
+scripts/fix_*
+scripts/inject_*
+scripts/measure-*
+scripts/patch_*
+scripts/quality_*
+scripts/read_*
+scripts/rebuild_*
+scripts/reconstruct_*
+scripts/renumber-*
+scripts/reorder-*
+scripts/show_*
+scripts/sort-*
+scripts/split-*
+scripts/modules_*.txt
+scripts/chunk*.txt
+
+# データのスクラッチ
+src/data/test.ts
+src/data/*_rebuilt.ts
+
+# Vite の初期テンプレート由来（未使用）
+src/assets/react.svg
+src/assets/vite.svg

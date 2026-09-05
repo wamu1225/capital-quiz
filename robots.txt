@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://study-apps.com/capital-quiz/sitemap.xml
