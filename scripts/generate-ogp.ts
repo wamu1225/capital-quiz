@@ -23,7 +23,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" v
   </g>
   <text x="96" y="230" font-family="${FONT}" font-size="70" font-weight="700" fill="#16324a">世界の首都</text>
   <text x="96" y="308" font-family="${FONT}" font-size="70" font-weight="700" fill="#16324a">クイズ</text>
-  <text x="96" y="366" font-family="${FONT}" font-size="26" fill="#6b7380">訳ありの首都まで、外務省の情報にもとづいて正確に</text>
+  <text x="96" y="366" font-family="${FONT}" font-size="26" fill="#6b7380">訳ありの首都も、外務省の情報で正確に</text>
   <line x1="96" y1="420" x2="560" y2="420" stroke="#c9963c" stroke-width="2"/>
   <text x="96" y="470" font-family="${FONT}" font-size="24" fill="#16324a" font-weight="600">study-apps.com/capital-quiz/</text>
 </svg>`;
