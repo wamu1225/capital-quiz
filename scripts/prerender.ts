@@ -191,7 +191,7 @@ console.log('✓ /trivia/');
     const rows = list
       .map(
         (c) =>
-          `<li>${esc(c.commonName)}：${esc(c.capital)}${c.specialType ? '（訳あり）' : ''}</li>`,
+          `<li><a href="${BASE}/countries/${c.id}/" style="color:#16324a">${esc(c.commonName)}</a>：${esc(c.capital)}${c.specialType ? '（訳あり）' : ''}</li>`,
       )
       .join('\n');
     return `<h2 style="font-size:1.05rem;margin:20px 0 8px;color:#16324a">${esc(REGION_LABELS[r])}</h2>
@@ -215,6 +215,36 @@ console.log('✓ /trivia/');
   );
 }
 console.log('✓ /countries/');
+
+// ── 個別国ページ（200件） ──
+for (const c of countries) {
+  const explanation = c.specialType ? triviaExplanations[c.id] : null;
+  const desc = `${c.commonName}の首都は${c.capital}。外務省の公表情報にもとづく基本情報${explanation ? 'と、首都をめぐる背景の解説' : ''}です。`;
+  const body = `<article style="${shellStyle}">
+    <p style="font-size:0.85rem;color:#6b7380;margin-bottom:8px"><a href="${BASE}/countries/" style="color:#6b7380">国と首都の一覧</a>／${esc(REGION_LABELS[c.region])}</p>
+    <h1 style="${h1Style}">${esc(c.commonName)}</h1>
+    <p>正式名称：${esc(c.officialName)}</p>
+    <div style="padding:18px 20px;background:#fff;border:1.5px solid #d8d0bd;border-radius:6px;margin-bottom:20px">
+      <div style="font-size:0.8rem;color:#c9963c;font-weight:700;margin-bottom:4px">首都</div>
+      <div style="font-size:1.6rem;font-weight:700;color:#16324a">${esc(c.capital)}</div>
+    </div>
+    ${c.note ? `<p style="background:#f3ede0;padding:14px 16px;border-radius:6px;margin-bottom:16px">補足：${esc(c.note)}</p>` : ''}
+    ${explanation ? `<p style="background:#f3ede0;padding:14px 16px;border-radius:6px;margin-bottom:16px">訳あり解説：${esc(explanation)}</p>` : ''}
+    <p>出典：<a href="${esc(c.mofaUrl)}" style="color:#16324a">外務省の公表情報</a></p>
+    <p style="margin-top:20px"><a href="${BASE}/region/${c.region}/" style="color:#16324a">${esc(REGION_LABELS[c.region])}のクイズに挑戦する</a></p>
+    ${footerNav}
+  </article>`;
+  writePage(
+    `countries/${c.id}`,
+    wrap(2, c.commonName, desc, `/countries/${c.id}/`, body, {
+      '@context': 'https://schema.org',
+      '@type': 'Country',
+      name: c.commonName,
+      url: `${BASE_URL}/countries/${c.id}/`,
+    }),
+  );
+}
+console.log('✓ /countries/<id>/ 全200件');
 
 // ── about / privacy ──
 for (const [slug, title, desc, content] of [
@@ -248,6 +278,7 @@ const urls = [
   ...REGION_ORDER.map((r) => ({ loc: `${BASE_URL}/region/${r}/`, priority: '0.7' })),
   { loc: `${BASE_URL}/trivia/`, priority: '0.8' },
   { loc: `${BASE_URL}/countries/`, priority: '0.8' },
+  ...countries.map((c) => ({ loc: `${BASE_URL}/countries/${c.id}/`, priority: '0.5' })),
   { loc: `${BASE_URL}/about/`, priority: '0.3' },
   { loc: `${BASE_URL}/privacy/`, priority: '0.2' },
 ];

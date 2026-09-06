@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import RegionSelect from './pages/RegionSelect';
 import Quiz from './pages/Quiz';
 import Reference from './pages/Reference';
+import CountryDetail from './pages/CountryDetail';
 import StaticPage from './pages/StaticPage';
 
 function useRoute() {
@@ -33,6 +34,7 @@ export default function App() {
 
   let page: React.ReactNode;
   const regionMatch = path.match(/^\/region\/([a-z]+)\/?$/);
+  const countryMatch = path.match(/^\/countries\/([a-z_]+)\/?$/);
 
   if (path === '/') {
     page = <Home />;
@@ -66,6 +68,8 @@ export default function App() {
     );
   } else if (path === '/countries/') {
     page = <Reference />;
+  } else if (countryMatch) {
+    page = <CountryDetail key={countryMatch[1]} id={countryMatch[1]} />;
   } else if (path === '/about/') {
     page = <StaticPage title="このサイトについて" content={ABOUT_CONTENT} />;
   } else if (path === '/privacy/') {

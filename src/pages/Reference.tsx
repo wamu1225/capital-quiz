@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { countries, REGION_LABELS, type Region } from '../data/countries';
+import { href } from '../lib/router';
 
 const REGION_ORDER: Region[] = ['namerica', 'latinamerica', 'europe', 'africa', 'middleeast', 'asia', 'oceania'];
 
@@ -31,7 +32,7 @@ export default function Reference() {
               {list.map((c) => (
                 <li className="ref-row" key={c.id}>
                   <span>
-                    {c.commonName}
+                    <a href={href(`/countries/${c.id}/`)}>{c.commonName}</a>
                     {c.specialType && <span className="ref-row__badge">訳あり</span>}
                   </span>
                   <span className="ref-row__capital">{c.capital}</span>
