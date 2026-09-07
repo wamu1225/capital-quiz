@@ -1,8 +1,10 @@
 import { href } from '../lib/router';
+import { SITE_NAME } from '../data/static-pages';
 
 export default function Home() {
   return (
     <>
+      <h1 className="visually-hidden">{SITE_NAME}</h1>
       <p className="home-lead">
         オランダの首都はアムステルダム、では政治の中心地は？ 台湾の首都は、と聞かれたら何と答えますか？
         世界には、単純な暗記だけでは答えにくい「訳あり」の首都を持つ国が少なくありません。
