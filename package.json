@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "ogp": "npx tsx scripts/generate-ogp.ts",
     "validate": "npx tsx scripts/validate-data.ts",
-    "predeploy": "node ../../_pipeline/tmp-tools/predeploy-guard.mjs && npm run validate && npm run ogp && npm run build && npx tsx scripts/prerender.ts",
+    "predeploy": "node ../../_pipeline/tmp-tools/predeploy-guard.mjs && npm run validate && npm run ogp && npm run build && npx tsx scripts/prerender.ts && node ../../_pipeline/tmp-tools/prerender-svg-guard.mjs",
     "deploy": "gh-pages -d dist --dotfiles"
   },
   "dependencies": {
