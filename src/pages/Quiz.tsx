@@ -87,11 +87,15 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
       <div className="quiz-options">
         {q.options.map((opt, i) => {
           let cls = 'quiz-option';
-          if (answered && i === q.correctIndex) cls += ' quiz-option--correct';
-          else if (answered && i === selected) cls += ' quiz-option--wrong';
+          const isCorrectOption = answered && i === q.correctIndex;
+          const isWrongOption = answered && i === selected && i !== q.correctIndex;
+          if (isCorrectOption) cls += ' quiz-option--correct';
+          else if (isWrongOption) cls += ' quiz-option--wrong';
           return (
             <button key={opt} className={cls} onClick={() => choose(i)} disabled={answered}>
-              {opt}
+              <span className="quiz-option__label">{opt}</span>
+              {isCorrectOption && <span className="quiz-option__mark quiz-option__mark--correct">○ 正解</span>}
+              {isWrongOption && <span className="quiz-option__mark quiz-option__mark--wrong">× 不正解</span>}
             </button>
           );
         })}

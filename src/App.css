@@ -175,6 +175,10 @@
 }
 
 .quiz-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   text-align: left;
   padding: 14px 18px;
   border: 1.5px solid var(--line);
@@ -203,6 +207,21 @@
 .quiz-option--wrong {
   border-color: #b0483f;
   background: #fbecea;
+  color: #8a352c;
+}
+
+.quiz-option__mark {
+  flex: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.quiz-option__mark--correct {
+  color: #1e5c37;
+}
+
+.quiz-option__mark--wrong {
   color: #8a352c;
 }
 
