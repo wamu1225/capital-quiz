@@ -185,6 +185,50 @@ console.log('✓ /region/<region>/ 全7件');
 }
 console.log('✓ /trivia/');
 
+// ── 今日のチャレンジ（デイリー） ──
+{
+  const desc = '日替わりの5問。同じ日は誰でも同じ問題、翌日になると変わります。1分程度で遊べます。';
+  const body = `<article style="${shellStyle}">
+    <h1 style="${h1Style}">今日のチャレンジ</h1>
+    <p>${esc(desc)}</p>
+    <p><a href="${BASE}/" style="color:#16324a">← トップに戻る</a></p>
+    ${footerNav}
+  </article>`;
+  writePage(
+    'daily',
+    wrap(1, '今日のチャレンジ', desc, '/daily/', body, {
+      '@context': 'https://schema.org',
+      '@type': 'Quiz',
+      name: '今日のチャレンジ',
+      url: `${BASE_URL}/daily/`,
+      inLanguage: 'ja',
+    }),
+  );
+}
+console.log('✓ /daily/');
+
+// ── 復習（間違えた国だけ出題） ──
+{
+  const desc = '地域別クイズで間違えた国だけを出題する復習モード。ブラウザに保存された記録にもとづきます。';
+  const body = `<article style="${shellStyle}">
+    <h1 style="${h1Style}">復習：間違えた国だけ</h1>
+    <p>${esc(desc)}</p>
+    <p><a href="${BASE}/region/" style="color:#16324a">← 地域選択に戻る</a></p>
+    ${footerNav}
+  </article>`;
+  writePage(
+    'review',
+    wrap(1, '復習：間違えた国だけ', desc, '/review/', body, {
+      '@context': 'https://schema.org',
+      '@type': 'Quiz',
+      name: '復習：間違えた国だけ',
+      url: `${BASE_URL}/review/`,
+      inLanguage: 'ja',
+    }),
+  );
+}
+console.log('✓ /review/');
+
 // ── 国と首都の一覧 ──
 {
   const desc = '外務省の公表情報にもとづく200の国・地域と、その首都の一覧です。地域別に検索できます。';
@@ -282,6 +326,8 @@ const urls = [
   { loc: `${BASE_URL}/region/`, priority: '0.8' },
   ...REGION_ORDER.map((r) => ({ loc: `${BASE_URL}/region/${r}/`, priority: '0.7' })),
   { loc: `${BASE_URL}/trivia/`, priority: '0.8' },
+  { loc: `${BASE_URL}/daily/`, priority: '0.6' },
+  { loc: `${BASE_URL}/review/`, priority: '0.3' },
   { loc: `${BASE_URL}/countries/`, priority: '0.8' },
   ...countries.map((c) => ({ loc: `${BASE_URL}/countries/${c.id}/`, priority: '0.5' })),
   { loc: `${BASE_URL}/about/`, priority: '0.3' },
