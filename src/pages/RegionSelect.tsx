@@ -13,7 +13,7 @@ export default function RegionSelect() {
     <>
       <h1 className="content-h1">地域別クイズ</h1>
       <p className="content-p">
-        出題したい地域を選んでください。1回のクイズは10問です。到達度：
+        出題したい地域を選んでください。1回のクイズは5問・1分程度で終わります。到達度：
         <strong>
           {mastered}/{totalQuizCountries}
         </strong>
@@ -38,7 +38,7 @@ export default function RegionSelect() {
                   <span className="region-list__count">{count}か国・地域</span>
                   {best && (
                     <span className="region-list__best">
-                      自己ベスト {best.score}/10（{formatTimeMs(best.timeMs)}）
+                      自己ベスト {best.score}/5（{formatTimeMs(best.timeMs)}）
                     </span>
                   )}
                 </span>

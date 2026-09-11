@@ -1,9 +1,18 @@
 import { useMemo, useRef, useState } from 'react';
 import type { Question } from '../lib/quiz';
-import type { Region } from '../data/countries';
+import type { Country, Region } from '../data/countries';
+import { GEO, isoToFlagEmoji } from '../data/geo';
 import { triviaExplanations } from '../data/trivia';
 import { href } from '../lib/router';
-import { formatTimeMs, getRegionBest, recordCountryAnswer, recordRegionResult, type RegionBest } from '../lib/progress';
+import {
+  formatTimeMs,
+  getRegionBest,
+  recordCountryAnswer,
+  recordDailyCompletion,
+  recordRegionResult,
+  type RegionBest,
+} from '../lib/progress';
+import WorldMapDot from '../components/WorldMapDot';
 
 interface QuizProps {
   title: string;
@@ -14,19 +23,28 @@ interface QuizProps {
   showExplanationAlways?: boolean;
   /** 指定すると自己ベストの記録・表示を行う（地域別クイズ用。復習・トリビアでは未指定） */
   region?: Region;
+  /** デイリーチャレンジの完了記録・連続日数表示を行う */
+  isDaily?: string;
 }
 
-export default function Quiz({ title, backHref, backLabel, buildQuestions, showExplanationAlways, region }: QuizProps) {
+function flagFor(country: Country): string {
+  const geo = GEO[country.id];
+  return geo ? isoToFlagEmoji(geo.iso2) : '🏳️';
+}
+
+export default function Quiz({ title, backHref, backLabel, buildQuestions, showExplanationAlways, region, isDaily }: QuizProps) {
   const questions = useMemo(buildQuestions, [buildQuestions]);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
+  const [missed, setMissed] = useState<Question[]>([]);
   const prevBest = useMemo<RegionBest | null>(() => (region ? getRegionBest(region) : null), [region]);
   const startRef = useRef(Date.now());
   const recordedRef = useRef(false);
   const [result, setResult] = useState<{ best: RegionBest; isNewBest: boolean } | null>(null);
+  const [dailyStreak, setDailyStreak] = useState<number | null>(null);
 
   if (questions.length === 0) {
     return (
@@ -40,11 +58,28 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
     );
   }
 
+  function reset() {
+    setIndex(0);
+    setSelected(null);
+    setScore(0);
+    setStreak(0);
+    setBestStreak(0);
+    setMissed([]);
+    startRef.current = Date.now();
+    recordedRef.current = false;
+    setResult(null);
+  }
+
   if (index >= questions.length) {
-    if (region && !recordedRef.current) {
+    if (!recordedRef.current) {
       recordedRef.current = true;
-      const timeMs = Date.now() - startRef.current;
-      setResult(recordRegionResult(region, score, timeMs));
+      if (region) {
+        const timeMs = Date.now() - startRef.current;
+        setResult(recordRegionResult(region, score, timeMs));
+      }
+      if (isDaily) {
+        setDailyStreak(recordDailyCompletion(isDaily).streakDays);
+      }
     }
     return (
       <div className="quiz-result">
@@ -53,6 +88,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
           {score} / {questions.length} 問正解
         </p>
         {bestStreak > 1 && <p className="quiz-result__streak">最大連続正解：{bestStreak}問</p>}
+        {dailyStreak !== null && <p className="quiz-result__best quiz-result__best--new">🔥 デイリーチャレンジ連続{dailyStreak}日目！</p>}
         {result && (
           <p className={result.isNewBest ? 'quiz-result__best quiz-result__best--new' : 'quiz-result__best'}>
             {result.isNewBest
@@ -60,25 +96,34 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
               : `自己ベスト：${result.best.score}問・${formatTimeMs(result.best.timeMs)}`}
           </p>
         )}
+        {missed.length > 0 && (
+          <div className="quiz-result__missed">
+            <div className="quiz-result__missed-label">間違えた国</div>
+            <ul className="quiz-result__missed-list">
+              {missed.map((m) => (
+                <li key={m.country.id}>
+                  <a href={href(`/countries/${m.country.id}/`)}>
+                    <span className="quiz-result__missed-flag">{flagFor(m.country)}</span>
+                    <span>{m.country.commonName}</span>
+                    <span className="quiz-result__missed-capital">{m.country.capital}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="quiz-result__actions">
-          <button
-            className="btn-primary"
-            onClick={() => {
-              setIndex(0);
-              setSelected(null);
-              setScore(0);
-              setStreak(0);
-              setBestStreak(0);
-              startRef.current = Date.now();
-              recordedRef.current = false;
-              setResult(null);
-            }}
-          >
+          <button className="btn-primary" onClick={reset}>
             もう一度
           </button>
           <a className="btn-secondary" href={href(backHref)}>
             {backLabel}
           </a>
+          {missed.length > 0 && (
+            <a className="btn-secondary" href={href('/review/')}>
+              間違えた国を復習する
+            </a>
+          )}
         </div>
       </div>
     );
@@ -88,6 +133,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
   const answered = selected !== null;
   const isCorrect = selected === q.correctIndex;
   const explanation = triviaExplanations[q.country.id];
+  const geo = GEO[q.country.id];
 
   function choose(i: number) {
     if (answered) return;
@@ -103,6 +149,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
       });
     } else {
       setStreak(0);
+      setMissed((m) => [...m, q]);
     }
   }
 
@@ -139,7 +186,12 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
       )}
       <div className="quiz-question">
         <div className="quiz-question__label">この国の首都は？</div>
-        <div className="quiz-question__country">{q.country.commonName}</div>
+        <div className="quiz-question__country">
+          <span className="quiz-question__flag" aria-hidden="true">
+            {flagFor(q.country)}
+          </span>
+          {q.country.commonName}
+        </div>
       </div>
       <div className="quiz-options">
         {q.options.map((opt, i) => {
@@ -157,6 +209,11 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
           );
         })}
       </div>
+      {answered && geo && (
+        <div className="quiz-reveal-map">
+          <WorldMapDot lat={geo.lat} lng={geo.lng} label={q.country.commonName} />
+        </div>
+      )}
       {answered && (showExplanationAlways || (explanation && true)) && explanation && (
         <div className="quiz-explanation">
           <div className="quiz-explanation__label">{isCorrect ? '正解 ／ 訳あり解説' : '訳あり解説'}</div>

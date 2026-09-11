@@ -14,13 +14,21 @@ interface CountryStat {
   needsReview: boolean;
 }
 
+interface DailyInfo {
+  /** 最後にデイリーチャレンジを完了した日（YYYY-MM-DD） */
+  lastCompletedDate: string | null;
+  /** 連続で完了した日数 */
+  streakDays: number;
+}
+
 interface ProgressData {
   regionBests: Partial<Record<Region, RegionBest>>;
   countryStats: Record<string, CountryStat>;
+  daily: DailyInfo;
 }
 
 function emptyData(): ProgressData {
-  return { regionBests: {}, countryStats: {} };
+  return { regionBests: {}, countryStats: {}, daily: { lastCompletedDate: null, streakDays: 0 } };
 }
 
 /** localStorage が使えない・壊れた値が入っている場合でも落ちないようにする（O-3-17完了条件7） */
@@ -32,6 +40,10 @@ function loadProgress(): ProgressData {
     return {
       regionBests: parsed && typeof parsed.regionBests === 'object' ? parsed.regionBests : {},
       countryStats: parsed && typeof parsed.countryStats === 'object' ? parsed.countryStats : {},
+      daily:
+        parsed && typeof parsed.daily === 'object' && parsed.daily
+          ? { lastCompletedDate: parsed.daily.lastCompletedDate ?? null, streakDays: Number(parsed.daily.streakDays) || 0 }
+          : { lastCompletedDate: null, streakDays: 0 },
     };
   } catch {
     return emptyData();
@@ -87,4 +99,25 @@ export function getReviewCountryIds(): string[] {
 
 export function formatTimeMs(ms: number): string {
   return (ms / 1000).toFixed(1) + '秒';
+}
+
+function addDaysStr(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dt = new Date(y, m - 1, d + days);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+}
+
+export function getDailyStatus(today: string): { completedToday: boolean; streakDays: number } {
+  const data = loadProgress();
+  return { completedToday: data.daily.lastCompletedDate === today, streakDays: data.daily.streakDays };
+}
+
+/** デイリーチャレンジ完了を記録し、連続日数を更新する（同じ日に複数回呼んでも二重加算しない） */
+export function recordDailyCompletion(today: string): { streakDays: number } {
+  const data = loadProgress();
+  if (data.daily.lastCompletedDate === today) return { streakDays: data.daily.streakDays };
+  const wasYesterday = data.daily.lastCompletedDate === addDaysStr(today, -1);
+  data.daily = { lastCompletedDate: today, streakDays: wasYesterday ? data.daily.streakDays + 1 : 1 };
+  saveProgress(data);
+  return { streakDays: data.daily.streakDays };
 }

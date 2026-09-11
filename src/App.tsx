@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { BASE, getCurrentPath, href, navigate } from './lib/router';
-import { questionsForRegion, questionsForCountryIds, triviaQuestions } from './lib/quiz';
+import { questionsForRegion, questionsForCountryIds, triviaQuestions, dailyQuestions, todayDateStr } from './lib/quiz';
 import { getReviewCountryIds } from './lib/progress';
 import { REGION_LABELS, type Region } from './data/countries';
 import { SITE_NAME, ABOUT_CONTENT, PRIVACY_CONTENT } from './data/static-pages';
@@ -51,13 +51,25 @@ export default function App() {
           title={`地域別クイズ：${label}`}
           backHref="/region/"
           backLabel="地域選択に戻る"
-          buildQuestions={() => questionsForRegion(region, 10)}
+          buildQuestions={() => questionsForRegion(region, 5)}
           region={region}
         />
       );
     } else {
       page = <NotFound />;
     }
+  } else if (path === '/daily/') {
+    const today = todayDateStr();
+    page = (
+      <Quiz
+        key={today}
+        title="今日のチャレンジ"
+        backHref="/"
+        backLabel="トップに戻る"
+        buildQuestions={() => dailyQuestions(today)}
+        isDaily={today}
+      />
+    );
   } else if (path === '/review/') {
     page = (
       <Quiz
