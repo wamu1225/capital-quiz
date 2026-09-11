@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { BASE, getCurrentPath, href, navigate } from './lib/router';
-import { questionsForRegion, triviaQuestions } from './lib/quiz';
+import { questionsForRegion, questionsForCountryIds, triviaQuestions } from './lib/quiz';
+import { getReviewCountryIds } from './lib/progress';
 import { REGION_LABELS, type Region } from './data/countries';
 import { SITE_NAME, ABOUT_CONTENT, PRIVACY_CONTENT } from './data/static-pages';
 import Home from './pages/Home';
@@ -51,11 +52,21 @@ export default function App() {
           backHref="/region/"
           backLabel="地域選択に戻る"
           buildQuestions={() => questionsForRegion(region, 10)}
+          region={region}
         />
       );
     } else {
       page = <NotFound />;
     }
+  } else if (path === '/review/') {
+    page = (
+      <Quiz
+        title="復習：間違えた国だけ"
+        backHref="/region/"
+        backLabel="地域選択に戻る"
+        buildQuestions={() => questionsForCountryIds(getReviewCountryIds())}
+      />
+    );
   } else if (path === '/trivia/') {
     page = (
       <Quiz

@@ -48,6 +48,16 @@ export function questionsForRegion(region: Region, count: number): Question[] {
   return picked.map((c) => makeQuestion(c, pool, globalPool));
 }
 
+/** 指定した国IDだけを出題する（復習モード用）。誤答は各国の同地域から優先して選ぶ */
+export function questionsForCountryIds(ids: string[]): Question[] {
+  const targets = countries.filter((c) => c.includeInQuiz && ids.includes(c.id));
+  const globalPool = countries.filter((c) => c.includeInQuiz);
+  return shuffle(targets).map((c) => {
+    const regionalPool = countries.filter((o) => o.includeInQuiz && o.region === c.region);
+    return makeQuestion(c, regionalPool, globalPool);
+  });
+}
+
 /** 「訳ありの首都」トリビアモード＝specialType付きの国だけを出題 */
 export function triviaQuestions(): Question[] {
   const pool = countries.filter((c) => c.specialType && c.includeInQuiz);
