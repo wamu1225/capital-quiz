@@ -103,7 +103,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
               {missed.map((m) => (
                 <li key={m.country.id}>
                   <a href={href(`/countries/${m.country.id}/`)}>
-                    <span className="quiz-result__missed-flag">{flagFor(m.country)}</span>
+                    <span className="quiz-result__missed-flag flag-emoji">{flagFor(m.country)}</span>
                     <span>{m.country.commonName}</span>
                     <span className="quiz-result__missed-capital">{m.country.capital}</span>
                   </a>
@@ -187,7 +187,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
       <div className="quiz-question">
         <div className="quiz-question__label">この国の首都は？</div>
         <div className="quiz-question__country">
-          <span className="quiz-question__flag" aria-hidden="true">
+          <span className="quiz-question__flag flag-emoji" aria-hidden="true">
             {flagFor(q.country)}
           </span>
           {q.country.commonName}

@@ -270,7 +270,7 @@ for (const c of countries) {
   const desc = `${c.commonName}の首都は${c.capital}。外務省の公表情報にもとづく基本情報${explanation ? 'と、首都をめぐる背景の解説' : ''}です。`;
   const body = `<article style="${shellStyle}">
     <p style="font-size:0.85rem;color:#6b7380;margin-bottom:8px"><a href="${BASE}/countries/" style="color:#6b7380">国と首都の一覧</a>／${esc(REGION_LABELS[c.region])}</p>
-    <h1 style="${h1Style}"><span aria-hidden="true" style="margin-right:10px">${flag}</span>${esc(c.commonName)}</h1>
+    <h1 style="${h1Style}"><span class="flag-emoji" aria-hidden="true" style="margin-right:10px">${flag}</span>${esc(c.commonName)}</h1>
     <p>正式名称：${esc(c.officialName)}</p>
     <div style="padding:18px 20px;background:#fff;border:1.5px solid #d8d0bd;border-radius:6px;margin-bottom:20px">
       <div style="font-size:0.8rem;color:#c9963c;font-weight:700;margin-bottom:4px">首都</div>

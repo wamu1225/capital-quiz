@@ -9,6 +9,14 @@
   --muted: #6b7380;
 }
 
+/* 国旗絵文字（Regional Indicator Symbols）専用のフォント指定。
+   本文の日本語フォント（Meiryo/Yu Gothic）はこの文字にも独自グリフ（文字2つの
+   モノクロ表示）を持っており、先に指定されているとカラー絵文字フォントへの
+   フォールバックが起きず「MY」のような文字表示になる（O-3-17で発見）。 */
+.flag-emoji {
+  font-family: 'Segoe UI Emoji', 'Noto Color Emoji', 'Apple Color Emoji', sans-serif;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

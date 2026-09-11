@@ -28,7 +28,7 @@ export default function CountryDetail({ id }: { id: string }) {
         <a href={href('/countries/')}>国と首都の一覧</a> ／ {REGION_LABELS[country.region]}
       </p>
       <h1 className="content-h1">
-        <span aria-hidden="true" style={{ marginRight: 10 }}>
+        <span className="flag-emoji" aria-hidden="true" style={{ marginRight: 10 }}>
           {flag}
         </span>
         {country.commonName}
