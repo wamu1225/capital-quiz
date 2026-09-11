@@ -17,6 +17,8 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [score, setScore] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
 
   if (questions.length === 0) {
     return (
@@ -37,6 +39,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
         <p className="quiz-result__score">
           {score} / {questions.length} 問正解
         </p>
+        {bestStreak > 1 && <p className="quiz-result__streak">最大連続正解：{bestStreak}問</p>}
         <div className="quiz-result__actions">
           <button
             className="btn-primary"
@@ -44,6 +47,8 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
               setIndex(0);
               setSelected(null);
               setScore(0);
+              setStreak(0);
+              setBestStreak(0);
             }}
           >
             もう一度
@@ -64,7 +69,16 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
   function choose(i: number) {
     if (answered) return;
     setSelected(i);
-    if (i === q.correctIndex) setScore((s) => s + 1);
+    if (i === q.correctIndex) {
+      setScore((s) => s + 1);
+      setStreak((s) => {
+        const next = s + 1;
+        setBestStreak((b) => Math.max(b, next));
+        return next;
+      });
+    } else {
+      setStreak(0);
+    }
   }
 
   function next() {
@@ -76,9 +90,22 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
     <>
       <div className="quiz-header">
         <a href={href(backHref)}>← {backLabel}</a>
-        <span className="quiz-progress">
-          {index + 1} / {questions.length}
-        </span>
+        <div className="quiz-stats">
+          <span className="quiz-stat">
+            <span className="quiz-stat__label">問題</span>
+            <span className="quiz-stat__value">
+              {index + 1}/{questions.length}
+            </span>
+          </span>
+          <span className="quiz-stat">
+            <span className="quiz-stat__label">スコア</span>
+            <span className="quiz-stat__value">{score}</span>
+          </span>
+          <span className="quiz-stat">
+            <span className="quiz-stat__label">連続正解</span>
+            <span className="quiz-stat__value">{streak}</span>
+          </span>
+        </div>
       </div>
       <div className="quiz-question">
         <div className="quiz-question__label">この国の首都は？</div>
