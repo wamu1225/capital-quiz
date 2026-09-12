@@ -1,5 +1,6 @@
 // 自動生成：ISO 3166-1 alpha-2コード・国の中心緯度経度（world-countriesパッケージ由来、_gen_geo.tsで生成）。
-// 国旗絵文字はiso2から動的に組み立てる（isoToFlagEmoji）。地図の点はlat/lngを使う。
+// iso2は国旗画像（public/flags/配下のflag-icons由来SVG。src/components/Flag.tsx）のファイル名にも使う。
+// 地図の点はlat/lngを使う。
 export interface GeoEntry { iso2: string; lat: number; lng: number; }
 
 export const GEO: Record<string, GeoEntry> = {
@@ -204,10 +205,3 @@ export const GEO: Record<string, GeoEntry> = {
   marshall: { iso2: 'MH', lat: 9, lng: 168 },
   micronesia: { iso2: 'FM', lat: 6.91666666, lng: 158.25 },
 };
-
-/** ISO 3166-1 alpha-2コードから国旗絵文字を組み立てる（Regional Indicator Symbols） */
-export function isoToFlagEmoji(iso2: string): string {
-  if (iso2 === 'XK') return '🇽🇰'; // コソボ：正式なISOコードなし・慣用のRegional Indicatorを直接使用
-  const codePoints = [...iso2.toUpperCase()].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65);
-  return String.fromCodePoint(...codePoints);
-}

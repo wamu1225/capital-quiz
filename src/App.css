@@ -9,12 +9,17 @@
   --muted: #6b7380;
 }
 
-/* 国旗絵文字（Regional Indicator Symbols）専用のフォント指定。
-   本文の日本語フォント（Meiryo/Yu Gothic）はこの文字にも独自グリフ（文字2つの
-   モノクロ表示）を持っており、先に指定されているとカラー絵文字フォントへの
-   フォールバックが起きず「MY」のような文字表示になる（O-3-17で発見）。 */
-.flag-emoji {
-  font-family: 'Segoe UI Emoji', 'Noto Color Emoji', 'Apple Color Emoji', sans-serif;
+/* 国旗はSVG画像で表示する（絵文字はRegional Indicator Symbolsの合字に対応しない
+   環境があり「MY」のような文字表示になることが実機検証で判明したため・O-3-17）。
+   src/components/Flag.tsx が public/flags/ 配下の flag-icons 由来SVGを参照する。 */
+.flag-img {
+  display: inline-block;
+  width: 28px;
+  height: 21px;
+  object-fit: cover;
+  border-radius: 2px;
+  vertical-align: middle;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
 .visually-hidden {
@@ -272,9 +277,10 @@
   gap: 12px;
 }
 
-.quiz-question__flag {
-  font-size: 2.4rem;
-  line-height: 1;
+.quiz-question__flag.flag-img {
+  width: 56px;
+  height: 42px;
+  border-radius: 4px;
 }
 
 .quiz-reveal-map {
@@ -436,10 +442,6 @@
   color: var(--ink);
 }
 
-.quiz-result__missed-flag {
-  font-size: 1.4rem;
-  line-height: 1;
-}
 
 .quiz-result__missed-capital {
   margin-left: auto;

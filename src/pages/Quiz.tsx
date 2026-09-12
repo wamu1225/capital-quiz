@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import type { Question } from '../lib/quiz';
-import type { Country, Region } from '../data/countries';
-import { GEO, isoToFlagEmoji } from '../data/geo';
+import type { Region } from '../data/countries';
+import { GEO } from '../data/geo';
 import { triviaExplanations } from '../data/trivia';
 import { href } from '../lib/router';
 import {
@@ -13,6 +13,7 @@ import {
   type RegionBest,
 } from '../lib/progress';
 import WorldMapDot from '../components/WorldMapDot';
+import Flag from '../components/Flag';
 
 interface QuizProps {
   title: string;
@@ -25,11 +26,6 @@ interface QuizProps {
   region?: Region;
   /** デイリーチャレンジの完了記録・連続日数表示を行う */
   isDaily?: string;
-}
-
-function flagFor(country: Country): string {
-  const geo = GEO[country.id];
-  return geo ? isoToFlagEmoji(geo.iso2) : '🏳️';
 }
 
 export default function Quiz({ title, backHref, backLabel, buildQuestions, showExplanationAlways, region, isDaily }: QuizProps) {
@@ -103,7 +99,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
               {missed.map((m) => (
                 <li key={m.country.id}>
                   <a href={href(`/countries/${m.country.id}/`)}>
-                    <span className="quiz-result__missed-flag flag-emoji">{flagFor(m.country)}</span>
+                    <Flag className="quiz-result__missed-flag" iso2={GEO[m.country.id]?.iso2} />
                     <span>{m.country.commonName}</span>
                     <span className="quiz-result__missed-capital">{m.country.capital}</span>
                   </a>
@@ -187,9 +183,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
       <div className="quiz-question">
         <div className="quiz-question__label">この国の首都は？</div>
         <div className="quiz-question__country">
-          <span className="quiz-question__flag flag-emoji" aria-hidden="true">
-            {flagFor(q.country)}
-          </span>
+          <Flag className="quiz-question__flag" iso2={geo?.iso2} />
           {q.country.commonName}
         </div>
       </div>

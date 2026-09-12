@@ -1,8 +1,9 @@
 import { countries, REGION_LABELS } from '../data/countries';
 import { triviaExplanations } from '../data/trivia';
 import { href } from '../lib/router';
-import { GEO, isoToFlagEmoji } from '../data/geo';
+import { GEO } from '../data/geo';
 import WorldMapDot from '../components/WorldMapDot';
+import Flag from '../components/Flag';
 
 export default function CountryDetail({ id }: { id: string }) {
   const country = countries.find((c) => c.id === id);
@@ -20,17 +21,14 @@ export default function CountryDetail({ id }: { id: string }) {
 
   const explanation = country.specialType ? triviaExplanations[country.id] : null;
   const geo = GEO[country.id];
-  const flag = geo ? isoToFlagEmoji(geo.iso2) : '🏳️';
 
   return (
     <>
       <p style={{ fontSize: '0.85rem', color: '#6b7380', marginBottom: 8 }}>
         <a href={href('/countries/')}>国と首都の一覧</a> ／ {REGION_LABELS[country.region]}
       </p>
-      <h1 className="content-h1">
-        <span className="flag-emoji" aria-hidden="true" style={{ marginRight: 10 }}>
-          {flag}
-        </span>
+      <h1 className="content-h1" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <Flag iso2={geo?.iso2} />
         {country.commonName}
       </h1>
       <p className="content-p">正式名称：{country.officialName}</p>

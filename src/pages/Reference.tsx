@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { countries, REGION_LABELS, type Region } from '../data/countries';
 import { href } from '../lib/router';
-import { GEO, isoToFlagEmoji } from '../data/geo';
+import { GEO } from '../data/geo';
+import Flag from '../components/Flag';
 
 const REGION_ORDER: Region[] = ['namerica', 'latinamerica', 'europe', 'africa', 'middleeast', 'asia', 'oceania'];
 
@@ -33,7 +34,7 @@ export default function Reference() {
               {list.map((c) => (
                 <li className="ref-row" key={c.id}>
                   <span>
-                    <span className="flag-emoji" aria-hidden="true">{GEO[c.id] ? isoToFlagEmoji(GEO[c.id].iso2) : '🏳️'}</span>{' '}
+                    <Flag iso2={GEO[c.id]?.iso2} className="ref-row__flag" />{' '}
                     <a href={href(`/countries/${c.id}/`)}>{c.commonName}</a>
                     {c.specialType && <span className="ref-row__badge">訳あり</span>}
                   </span>

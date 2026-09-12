@@ -6,7 +6,10 @@ import * as path from 'path';
 import { countries, REGION_LABELS, type Region } from '../src/data/countries';
 import { triviaExplanations } from '../src/data/trivia';
 import { ABOUT_CONTENT, PRIVACY_CONTENT, SITE_NAME } from '../src/data/static-pages';
-import { GEO, isoToFlagEmoji } from '../src/data/geo';
+import { GEO } from '../src/data/geo';
+
+const flagImg = (iso2: string | undefined, style = 'margin-right:10px;vertical-align:middle') =>
+  iso2 ? `<img class="flag-img" src="${BASE}/flags/${iso2.toLowerCase()}.svg" alt="" width="28" height="21" style="${style}" />` : '';
 import { renderWorldMapSvg } from '../src/lib/worldMap';
 
 const DIST_DIR = path.resolve(process.cwd(), 'dist');
@@ -237,7 +240,7 @@ console.log('✓ /review/');
     const rows = list
       .map(
         (c) =>
-          `<li><a href="${BASE}/countries/${c.id}/" style="color:#16324a">${esc(c.commonName)}</a>：${esc(c.capital)}${c.specialType ? '（訳あり）' : ''}</li>`,
+          `<li>${flagImg(GEO[c.id]?.iso2, 'margin-right:6px;vertical-align:middle;width:20px;height:15px')}<a href="${BASE}/countries/${c.id}/" style="color:#16324a">${esc(c.commonName)}</a>：${esc(c.capital)}${c.specialType ? '（訳あり）' : ''}</li>`,
       )
       .join('\n');
     return `<h2 style="font-size:1.05rem;margin:20px 0 8px;color:#16324a">${esc(REGION_LABELS[r])}</h2>
@@ -266,11 +269,10 @@ console.log('✓ /countries/');
 for (const c of countries) {
   const explanation = c.specialType ? triviaExplanations[c.id] : null;
   const geo = GEO[c.id];
-  const flag = geo ? isoToFlagEmoji(geo.iso2) : '🏳️';
   const desc = `${c.commonName}の首都は${c.capital}。外務省の公表情報にもとづく基本情報${explanation ? 'と、首都をめぐる背景の解説' : ''}です。`;
   const body = `<article style="${shellStyle}">
     <p style="font-size:0.85rem;color:#6b7380;margin-bottom:8px"><a href="${BASE}/countries/" style="color:#6b7380">国と首都の一覧</a>／${esc(REGION_LABELS[c.region])}</p>
-    <h1 style="${h1Style}"><span class="flag-emoji" aria-hidden="true" style="margin-right:10px">${flag}</span>${esc(c.commonName)}</h1>
+    <h1 style="${h1Style}">${flagImg(geo?.iso2)}${esc(c.commonName)}</h1>
     <p>正式名称：${esc(c.officialName)}</p>
     <div style="padding:18px 20px;background:#fff;border:1.5px solid #d8d0bd;border-radius:6px;margin-bottom:20px">
       <div style="font-size:0.8rem;color:#c9963c;font-weight:700;margin-bottom:4px">首都</div>
