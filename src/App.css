@@ -162,58 +162,16 @@
   border-color: var(--navy);
 }
 
-.play-hero__tile-emoji {
-  font-size: 1.6rem;
-}
-
 .play-hero__progress {
   font-size: 0.85rem;
   color: var(--muted);
 }
 
-/* ── Home: 目次スタイル（カードグリッドにしない） ── */
+/* ── Home: 導入文 ── */
 .home-lead {
   font-size: 1rem;
   line-height: 1.9;
   color: var(--ink);
-  margin-bottom: 32px;
-}
-
-.mode-index {
-  border-top: 1px solid var(--navy);
-}
-
-.mode-index__item {
-  display: block;
-  padding: 20px 4px;
-  border-bottom: 1px solid var(--line);
-}
-
-.mode-index__item:hover .mode-index__title {
-  color: var(--navy);
-  border-bottom-color: var(--navy);
-}
-
-.mode-index__num {
-  font-size: 0.75rem;
-  color: var(--gold);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-}
-
-.mode-index__title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin: 4px 0 6px;
-  border-bottom: 1px solid transparent;
-  display: inline-block;
-}
-
-.mode-index__desc {
-  font-size: 0.92rem;
-  color: var(--muted);
-  line-height: 1.7;
-  max-width: 56ch;
 }
 
 /* ── Quiz screens ─────────────────────────── */
@@ -417,6 +375,16 @@
   text-align: left;
   max-width: 360px;
   margin: 8px auto 0;
+}
+
+.quiz-result__missed .world-map-dot-wrap {
+  margin-bottom: 6px;
+}
+
+.quiz-result__map-legend {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 12px;
 }
 
 .quiz-result__missed-label {

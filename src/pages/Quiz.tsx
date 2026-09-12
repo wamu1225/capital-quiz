@@ -13,6 +13,7 @@ import {
   type RegionBest,
 } from '../lib/progress';
 import WorldMapDot from '../components/WorldMapDot';
+import WorldMapMulti from '../components/WorldMapMulti';
 import Flag from '../components/Flag';
 
 interface QuizProps {
@@ -36,6 +37,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const [missed, setMissed] = useState<Question[]>([]);
+  const [played, setPlayed] = useState<{ q: Question; correct: boolean }[]>([]);
   const prevBest = useMemo<RegionBest | null>(() => (region ? getRegionBest(region) : null), [region]);
   const startRef = useRef(Date.now());
   const recordedRef = useRef(false);
@@ -61,6 +63,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
     setStreak(0);
     setBestStreak(0);
     setMissed([]);
+    setPlayed([]);
     startRef.current = Date.now();
     recordedRef.current = false;
     setResult(null);
@@ -84,13 +87,31 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
           {score} / {questions.length} 問正解
         </p>
         {bestStreak > 1 && <p className="quiz-result__streak">最大連続正解：{bestStreak}問</p>}
-        {dailyStreak !== null && <p className="quiz-result__best quiz-result__best--new">🔥 デイリーチャレンジ連続{dailyStreak}日目！</p>}
-        {result && (
-          <p className={result.isNewBest ? 'quiz-result__best quiz-result__best--new' : 'quiz-result__best'}>
-            {result.isNewBest
-              ? `🎉 自己ベスト更新！（${result.best.score}問・${formatTimeMs(result.best.timeMs)}）`
-              : `自己ベスト：${result.best.score}問・${formatTimeMs(result.best.timeMs)}`}
-          </p>
+        {dailyStreak !== null && <p className="quiz-result__best quiz-result__best--new">デイリーチャレンジ連続{dailyStreak}日目</p>}
+        {result &&
+          (score === 0 ? (
+            <p className="quiz-result__best">次はきっと分かる。もう一度いってみよう</p>
+          ) : (
+            <p className={result.isNewBest ? 'quiz-result__best quiz-result__best--new' : 'quiz-result__best'}>
+              {result.isNewBest
+                ? `自己ベスト更新！（${result.best.score}問・${formatTimeMs(result.best.timeMs)}）`
+                : `自己ベスト：${result.best.score}問・${formatTimeMs(result.best.timeMs)}`}
+            </p>
+          ))}
+        {played.length > 0 && (
+          <div className="quiz-result__missed">
+            <div className="quiz-result__missed-label">今回めぐった国</div>
+            <WorldMapMulti
+              points={played
+                .map((p) => {
+                  const g = GEO[p.q.country.id];
+                  return g ? { ...g, correct: p.correct } : null;
+                })
+                .filter((g): g is NonNullable<typeof g> => Boolean(g))}
+              label="今回めぐった国"
+            />
+            <p className="quiz-result__map-legend">緑＝正解した国／赤＝間違えた国</p>
+          </div>
         )}
         {missed.length > 0 && (
           <div className="quiz-result__missed">
@@ -136,6 +157,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
     setSelected(i);
     const correct = i === q.correctIndex;
     recordCountryAnswer(q.country.id, correct);
+    setPlayed((p) => [...p, { q, correct }]);
     if (correct) {
       setScore((s) => s + 1);
       setStreak((s) => {
