@@ -6,6 +6,9 @@ export interface Question {
   correctIndex: number;
 }
 
+/** 1セットあたりの標準出題数（O-3-17床3＝5問程度・1分以内で終わり、即もう1回に入れる） */
+export const ROUND_SIZE = 5;
+
 type RandFn = () => number;
 
 function shuffle<T>(arr: T[], rand: RandFn = Math.random): T[] {
@@ -68,14 +71,17 @@ export function questionsForRegion(region: Region, count: number): Question[] {
   return picked.map((c) => makeQuestion(c, pool, globalPool));
 }
 
-/** 指定した国IDだけを出題する（復習モード用）。誤答は各国の同地域から優先して選ぶ */
-export function questionsForCountryIds(ids: string[]): Question[] {
+/** 指定した国IDだけを出題する（復習モード用）。誤答は各国の同地域から優先して選ぶ。
+ * 1回はROUND_SIZE問まで＝残りは次回以降の復習に回る（1分以内で終わる床3を復習にも適用）。 */
+export function questionsForCountryIds(ids: string[], count = ROUND_SIZE): Question[] {
   const targets = countries.filter((c) => c.includeInQuiz && ids.includes(c.id));
   const globalPool = countries.filter((c) => c.includeInQuiz);
-  return shuffle(targets).map((c) => {
-    const regionalPool = countries.filter((o) => o.includeInQuiz && o.region === c.region);
-    return makeQuestion(c, regionalPool, globalPool);
-  });
+  return shuffle(targets)
+    .slice(0, count)
+    .map((c) => {
+      const regionalPool = countries.filter((o) => o.includeInQuiz && o.region === c.region);
+      return makeQuestion(c, regionalPool, globalPool);
+    });
 }
 
 /** その日の日付（YYYY-MM-DD・端末のローカル日付）をシードに、全世界プールから5問を決定的に出題する */
@@ -97,9 +103,13 @@ export function todayDateStr(): string {
   return `${y}-${m}-${day}`;
 }
 
-/** 「訳ありの首都」トリビアモード＝specialType付きの国だけを出題 */
-export function triviaQuestions(): Question[] {
+/** 「訳ありの首都」トリビアモード＝specialType付きの国だけを出題。
+ * 全件（17か国）を一度に出すと1分では終わらないため、1回はROUND_SIZE問まで
+ * ＝残りは次に遊んだときに出る（毎回シャッフルするので何度か遊べば全件に当たる）。 */
+export function triviaQuestions(count = ROUND_SIZE): Question[] {
   const pool = countries.filter((c) => c.specialType && c.includeInQuiz);
   const globalPool = countries.filter((c) => c.includeInQuiz);
-  return shuffle(pool).map((c) => makeQuestion(c, globalPool));
+  return shuffle(pool)
+    .slice(0, count)
+    .map((c) => makeQuestion(c, globalPool));
 }
