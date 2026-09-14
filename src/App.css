@@ -241,6 +241,41 @@
   border-radius: 4px;
 }
 
+.quiz-question__flag--big.flag-img {
+  width: 160px;
+  height: 120px;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1.5px var(--line);
+}
+
+.timeattack-clock {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--navy-deep);
+  font-variant-numeric: tabular-nums;
+}
+
+.mastery-badges {
+  display: flex;
+  gap: 8px;
+  margin: -8px 0 18px;
+}
+
+.mastery-badge {
+  font-size: 0.78rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  color: var(--muted);
+}
+
+.mastery-badge.is-done {
+  border-color: #2f7d4f;
+  color: #1e5c37;
+  background: #eaf6ee;
+  font-weight: 700;
+}
+
 .quiz-reveal-map {
   margin: 16px 0;
   max-width: 320px;
@@ -420,6 +455,9 @@
 .quiz-country-link {
   margin: 16px 0 0;
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .world-map-dot {

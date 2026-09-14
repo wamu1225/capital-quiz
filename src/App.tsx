@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { BASE, getCurrentPath, href, navigate } from './lib/router';
-import { questionsForRegion, questionsForCountryIds, triviaQuestions, dailyQuestions, todayDateStr, ROUND_SIZE } from './lib/quiz';
+import {
+  questionsForRegion,
+  questionsForCountryIds,
+  questionsForGlobalKind,
+  triviaQuestions,
+  dailyQuestions,
+  todayDateStr,
+  ROUND_SIZE,
+} from './lib/quiz';
 import { getReviewCountryIds } from './lib/progress';
 import { REGION_LABELS, type Region } from './data/countries';
 import { SITE_NAME, ABOUT_CONTENT, PRIVACY_CONTENT } from './data/static-pages';
@@ -10,6 +18,7 @@ import Quiz from './pages/Quiz';
 import Reference from './pages/Reference';
 import CountryDetail from './pages/CountryDetail';
 import StaticPage from './pages/StaticPage';
+import TimeAttack from './pages/TimeAttack';
 
 function useRoute() {
   const [path, setPath] = useState(getCurrentPath());
@@ -79,6 +88,26 @@ export default function App() {
         buildQuestions={() => questionsForCountryIds(getReviewCountryIds())}
       />
     );
+  } else if (path === '/flags/') {
+    page = (
+      <Quiz
+        title="国旗クイズ"
+        backHref="/"
+        backLabel="トップに戻る"
+        buildQuestions={() => questionsForGlobalKind('flag', ROUND_SIZE)}
+      />
+    );
+  } else if (path === '/map/') {
+    page = (
+      <Quiz
+        title="位置クイズ"
+        backHref="/"
+        backLabel="トップに戻る"
+        buildQuestions={() => questionsForGlobalKind('map', ROUND_SIZE)}
+      />
+    );
+  } else if (path === '/timeattack/') {
+    page = <TimeAttack />;
   } else if (path === '/trivia/') {
     page = (
       <Quiz

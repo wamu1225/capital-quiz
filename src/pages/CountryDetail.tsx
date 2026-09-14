@@ -2,6 +2,7 @@ import { countries, REGION_LABELS } from '../data/countries';
 import { triviaExplanations } from '../data/trivia';
 import { href } from '../lib/router';
 import { GEO } from '../data/geo';
+import { getCountryMastery } from '../lib/progress';
 import WorldMapDot from '../components/WorldMapDot';
 import Flag from '../components/Flag';
 
@@ -21,6 +22,7 @@ export default function CountryDetail({ id }: { id: string }) {
 
   const explanation = country.specialType ? triviaExplanations[country.id] : null;
   const geo = GEO[country.id];
+  const mastery = getCountryMastery(country.id);
 
   return (
     <>
@@ -44,6 +46,12 @@ export default function CountryDetail({ id }: { id: string }) {
         <div style={{ fontSize: '0.8rem', color: '#c9963c', fontWeight: 700, marginBottom: 4 }}>首都</div>
         <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#16324a' }}>{country.capital}</div>
       </div>
+
+      <ul className="mastery-badges">
+        <li className={mastery.capital ? 'mastery-badge is-done' : 'mastery-badge'}>首都{mastery.capital ? '◯' : '－'}</li>
+        <li className={mastery.flag ? 'mastery-badge is-done' : 'mastery-badge'}>旗{mastery.flag ? '◯' : '－'}</li>
+        <li className={mastery.map ? 'mastery-badge is-done' : 'mastery-badge'}>位置{mastery.map ? '◯' : '－'}</li>
+      </ul>
 
       {geo && (
         <div className="quiz-reveal-map" style={{ maxWidth: 360, marginBottom: 20 }}>

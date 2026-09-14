@@ -2,15 +2,23 @@ import type { Region } from '../data/countries';
 
 const STORAGE_KEY = 'capital-quiz:progress:v1';
 
+export type QuizKind = 'capital' | 'flag' | 'map';
+
 export interface RegionBest {
   score: number;
   timeMs: number;
 }
 
 interface CountryStat {
-  /** これまでに一度でも正解したことがあるか（到達度カウント用） */
-  correctEver: boolean;
-  /** 直近の解答が誤答だったか（復習モードの対象） */
+  /** 首都当てで一度でも正解したことがあるか（到達度カウント・旧schemaのcorrectEverと同じ意味） */
+  capital?: boolean;
+  /** 国旗当てで一度でも正解したことがあるか */
+  flag?: boolean;
+  /** 位置当てで一度でも正解したことがあるか */
+  map?: boolean;
+  /** @deprecated 旧schema。読み込み時にcapitalへ移行する */
+  correctEver?: boolean;
+  /** 直近の解答（いずれかの出題形式）が誤答だったか（復習モードの対象） */
   needsReview: boolean;
 }
 
@@ -25,10 +33,12 @@ interface ProgressData {
   regionBests: Partial<Record<Region, RegionBest>>;
   countryStats: Record<string, CountryStat>;
   daily: DailyInfo;
+  /** タイムアタックの自己ベスト（60秒での正解数） */
+  timeAttackBest: number;
 }
 
 function emptyData(): ProgressData {
-  return { regionBests: {}, countryStats: {}, daily: { lastCompletedDate: null, streakDays: 0 } };
+  return { regionBests: {}, countryStats: {}, daily: { lastCompletedDate: null, streakDays: 0 }, timeAttackBest: 0 };
 }
 
 /** localStorage が使えない・壊れた値が入っている場合でも落ちないようにする（O-3-17完了条件7） */
@@ -37,13 +47,26 @@ function loadProgress(): ProgressData {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return emptyData();
     const parsed = JSON.parse(raw);
+    const rawStats = parsed && typeof parsed.countryStats === 'object' ? parsed.countryStats : {};
+    const countryStats: Record<string, CountryStat> = {};
+    for (const [id, s] of Object.entries(rawStats as Record<string, CountryStat>)) {
+      if (!s || typeof s !== 'object') continue;
+      countryStats[id] = {
+        // 旧schema（O-3-17）はcorrectEverしか持たない＝首都当てのことなのでcapitalへ移行する
+        capital: typeof s.capital === 'boolean' ? s.capital : Boolean(s.correctEver),
+        flag: Boolean(s.flag),
+        map: Boolean(s.map),
+        needsReview: Boolean(s.needsReview),
+      };
+    }
     return {
       regionBests: parsed && typeof parsed.regionBests === 'object' ? parsed.regionBests : {},
-      countryStats: parsed && typeof parsed.countryStats === 'object' ? parsed.countryStats : {},
+      countryStats,
       daily:
         parsed && typeof parsed.daily === 'object' && parsed.daily
           ? { lastCompletedDate: parsed.daily.lastCompletedDate ?? null, streakDays: Number(parsed.daily.streakDays) || 0 }
           : { lastCompletedDate: null, streakDays: 0 },
+      timeAttackBest: Number(parsed?.timeAttackBest) || 0,
     };
   } catch {
     return emptyData();
@@ -73,20 +96,22 @@ export function recordRegionResult(region: Region, score: number, timeMs: number
   return { best, isNewBest };
 }
 
-export function recordCountryAnswer(countryId: string, correct: boolean): void {
+export function recordCountryAnswer(countryId: string, kind: QuizKind, correct: boolean): void {
   const data = loadProgress();
   const prevStat = data.countryStats[countryId];
   data.countryStats[countryId] = {
-    correctEver: Boolean(prevStat?.correctEver) || correct,
+    capital: Boolean(prevStat?.capital) || (kind === 'capital' && correct),
+    flag: Boolean(prevStat?.flag) || (kind === 'flag' && correct),
+    map: Boolean(prevStat?.map) || (kind === 'map' && correct),
     needsReview: !correct,
   };
   saveProgress(data);
 }
 
-/** これまでに一度でも正解した国の数（「200中いくつ」の分子） */
+/** これまでに一度でも首都当てに正解した国の数（「200中いくつ」の分子。旧O-3-17の到達度と同じ定義） */
 export function getMasteredCount(): number {
   const data = loadProgress();
-  return Object.values(data.countryStats).filter((s) => s.correctEver).length;
+  return Object.values(data.countryStats).filter((s) => s.capital).length;
 }
 
 /** 直近の解答が誤答のままの国IDリスト（復習モードの出題対象） */
@@ -95,6 +120,48 @@ export function getReviewCountryIds(): string[] {
   return Object.entries(data.countryStats)
     .filter(([, s]) => s.needsReview)
     .map(([id]) => id);
+}
+
+/** 指定した出題形式で一度でも正解した国IDの集合（未出題を優先する出題づくりに使う） */
+export function getKindCorrectIds(kind: QuizKind): Set<string> {
+  const data = loadProgress();
+  const out = new Set<string>();
+  for (const [id, s] of Object.entries(data.countryStats)) {
+    if (s[kind]) out.add(id);
+  }
+  return out;
+}
+
+export interface CountryMastery {
+  capital: boolean;
+  flag: boolean;
+  map: boolean;
+}
+
+/** 国別ページの「首都◯／旗◯／位置◯」表示に使う */
+export function getCountryMastery(countryId: string): CountryMastery {
+  const s = loadProgress().countryStats[countryId];
+  return { capital: Boolean(s?.capital), flag: Boolean(s?.flag), map: Boolean(s?.map) };
+}
+
+export function isFullyMastered(countryId: string): boolean {
+  const m = getCountryMastery(countryId);
+  return m.capital && m.flag && m.map;
+}
+
+export function getTimeAttackBest(): number {
+  return loadProgress().timeAttackBest;
+}
+
+/** タイムアタックのスコアを記録し、自己ベストを更新したかを返す */
+export function reportTimeAttackScore(score: number): { best: number; isNewBest: boolean } {
+  const data = loadProgress();
+  const isNewBest = score > data.timeAttackBest;
+  if (isNewBest) {
+    data.timeAttackBest = score;
+    saveProgress(data);
+  }
+  return { best: isNewBest ? score : data.timeAttackBest, isNewBest };
 }
 
 export function formatTimeMs(ms: number): string {

@@ -24,6 +24,15 @@ export default function Home() {
           <a className="play-hero__tile" href={href('/region/')}>
             地域を選ぶ
           </a>
+          <a className="play-hero__tile" href={href('/flags/')}>
+            国旗クイズ
+          </a>
+          <a className="play-hero__tile" href={href('/map/')}>
+            位置クイズ
+          </a>
+          <a className="play-hero__tile" href={href('/timeattack/')}>
+            タイムアタック
+          </a>
           <a className="play-hero__tile" href={href('/trivia/')}>
             訳ありトリビア
           </a>

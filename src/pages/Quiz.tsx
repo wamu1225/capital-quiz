@@ -156,7 +156,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
     if (answered) return;
     setSelected(i);
     const correct = i === q.correctIndex;
-    recordCountryAnswer(q.country.id, correct);
+    recordCountryAnswer(q.country.id, q.kind, correct);
     setPlayed((p) => [...p, { q, correct }]);
     if (correct) {
       setScore((s) => s + 1);
@@ -203,11 +203,31 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
         </p>
       )}
       <div className="quiz-question">
-        <div className="quiz-question__label">この国の首都は？</div>
-        <div className="quiz-question__country">
-          <Flag className="quiz-question__flag" iso2={geo?.iso2} />
-          {q.country.commonName}
-        </div>
+        {q.kind === 'capital' && (
+          <>
+            <div className="quiz-question__label">この国の首都は？</div>
+            <div className="quiz-question__country">
+              <Flag className="quiz-question__flag" iso2={geo?.iso2} />
+              {q.country.commonName}
+            </div>
+          </>
+        )}
+        {q.kind === 'flag' && (
+          <>
+            <div className="quiz-question__label">この国旗の国は？</div>
+            <Flag className="quiz-question__flag quiz-question__flag--big" iso2={geo?.iso2} />
+          </>
+        )}
+        {q.kind === 'map' && (
+          <>
+            <div className="quiz-question__label">この位置にある国は？</div>
+            {geo && (
+              <div className="quiz-reveal-map">
+                <WorldMapDot lat={geo.lat} lng={geo.lng} />
+              </div>
+            )}
+          </>
+        )}
       </div>
       <div className="quiz-options">
         {q.options.map((opt, i) => {
@@ -225,7 +245,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
           );
         })}
       </div>
-      {answered && geo && (
+      {answered && geo && q.kind !== 'map' && (
         <div className="quiz-reveal-map">
           <WorldMapDot lat={geo.lat} lng={geo.lng} label={q.country.commonName} />
         </div>
@@ -239,6 +259,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
       {answered && (
         <>
           <p className="quiz-country-link">
+            {q.kind === 'map' && <Flag className="quiz-question__flag" iso2={geo?.iso2} />}
             <a href={href(`/countries/${q.country.id}/`)}>{q.country.commonName}のページを見る →</a>
           </p>
           <button className="quiz-next" onClick={next}>

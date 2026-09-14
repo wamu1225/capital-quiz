@@ -321,6 +321,31 @@ for (const [slug, title, desc, content] of [
 }
 console.log('✓ /about/ /privacy/');
 
+// ── 国旗クイズ・位置クイズ・タイムアタック（O-3-20＝問い方を増やす） ──
+for (const [slug, title, desc] of [
+  ['flags', '国旗クイズ', '国旗を見て国名を当てるクイズ。1回5問・1分程度で遊べます。'],
+  ['map', '位置クイズ', '世界地図上の位置を見て国名を当てるクイズ。1回5問・1分程度で遊べます。'],
+  ['timeattack', 'タイムアタック', '60秒で何問、首都当てに正解できるかを競う挑戦モード。自己ベストが記録されます。'],
+] as const) {
+  const body = `<article style="${shellStyle}">
+    <h1 style="${h1Style}">${esc(title)}</h1>
+    <p>${esc(desc)}</p>
+    <p><a href="${BASE}/" style="color:#16324a">← トップに戻る</a></p>
+    ${footerNav}
+  </article>`;
+  writePage(
+    slug,
+    wrap(1, title, desc, `/${slug}/`, body, {
+      '@context': 'https://schema.org',
+      '@type': 'Quiz',
+      name: title,
+      url: `${BASE_URL}/${slug}/`,
+      inLanguage: 'ja',
+    }),
+  );
+}
+console.log('✓ /flags/ /map/ /timeattack/');
+
 // ── sitemap.xml ──
 const today = new Date().toISOString().split('T')[0];
 const urls = [
@@ -330,6 +355,9 @@ const urls = [
   { loc: `${BASE_URL}/trivia/`, priority: '0.8' },
   { loc: `${BASE_URL}/daily/`, priority: '0.6' },
   { loc: `${BASE_URL}/review/`, priority: '0.3' },
+  { loc: `${BASE_URL}/flags/`, priority: '0.7' },
+  { loc: `${BASE_URL}/map/`, priority: '0.7' },
+  { loc: `${BASE_URL}/timeattack/`, priority: '0.7' },
   { loc: `${BASE_URL}/countries/`, priority: '0.8' },
   ...countries.map((c) => ({ loc: `${BASE_URL}/countries/${c.id}/`, priority: '0.5' })),
   { loc: `${BASE_URL}/about/`, priority: '0.3' },

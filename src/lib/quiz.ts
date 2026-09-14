@@ -1,6 +1,10 @@
 import { countries, type Country, type Region } from '../data/countries';
+import { getKindCorrectIds, type QuizKind } from './progress';
+
+export type { QuizKind };
 
 export interface Question {
+  kind: QuizKind;
   country: Country;
   options: string[];
   correctIndex: number;
@@ -58,17 +62,74 @@ export function makeQuestion(country: Country, pool: Country[], fallbackPool?: C
   const distractors = distractorCountries.map((c) => c.capital);
   const options = shuffle([country.capital, ...distractors], rand);
   const correctIndex = options.indexOf(country.capital);
-  return { country, options, correctIndex };
+  return { kind: 'capital', country, options, correctIndex };
 }
 
-/** 地域別クイズ用の出題プール（標準出題対象のみ） */
-export function questionsForRegion(region: Region, count: number): Question[] {
+/**
+ * 旗→国名／位置→国名の4択問題を作る（O-3-20＝問い方を増やす）。
+ * 選択肢は国名（commonName）。誤答選定のロジックはmakeQuestionと同じ
+ * （同地域を優先し、足りなければ全世界プールで補う）。
+ */
+export function makeNameQuestion(
+  kind: 'flag' | 'map',
+  country: Country,
+  pool: Country[],
+  fallbackPool?: Country[],
+  rand: RandFn = Math.random
+): Question {
+  const isValid = (c: Country) => c.id !== country.id && c.commonName !== country.commonName;
+  const primary = shuffle(pool.filter(isValid), rand).slice(0, 3);
+  let distractorCountries = primary;
+  if (distractorCountries.length < 3 && fallbackPool) {
+    const usedIds = new Set([country.id, ...distractorCountries.map((c) => c.id)]);
+    const extra = shuffle(
+      fallbackPool.filter((c) => isValid(c) && !usedIds.has(c.id)),
+      rand
+    ).slice(0, 3 - distractorCountries.length);
+    distractorCountries = distractorCountries.concat(extra);
+  }
+  const distractors = distractorCountries.map((c) => c.commonName);
+  const options = shuffle([country.commonName, ...distractors], rand);
+  const correctIndex = options.indexOf(country.commonName);
+  return { kind, country, options, correctIndex };
+}
+
+/** pool の中から、指定した出題形式で未正解の国を先に、正解済みの国を後に並べる（O-3-20＝未制覇優先） */
+function prioritizeUnseen(pool: Country[], kind: QuizKind, rand: RandFn): Country[] {
+  const correctIds = getKindCorrectIds(kind);
+  const unseen = shuffle(
+    pool.filter((c) => !correctIds.has(c.id)),
+    rand
+  );
+  const seen = shuffle(
+    pool.filter((c) => correctIds.has(c.id)),
+    rand
+  );
+  return [...unseen, ...seen];
+}
+
+/**
+ * 地域別クイズ用の出題プール（標準出題対象のみ）。
+ * O-3-20＝その出題形式でまだ正解していない国を優先して出す（幅＝制覇の軸）。
+ */
+export function questionsForRegion(region: Region, count: number, kind: QuizKind = 'capital'): Question[] {
   const pool = countries.filter((c) => c.region === region && c.includeInQuiz);
-  const picked = shuffle(pool).slice(0, Math.min(count, pool.length));
+  const ordered = prioritizeUnseen(pool, kind, Math.random);
+  const picked = ordered.slice(0, Math.min(count, ordered.length));
   // 誤答はまず同地域から選ぶ（同じ首都圏の紛らわしさが中心体験）。
   // 同地域だけで3件そろわない小地域（例：北米は2か国）は全世界プールで不足分を補う。
   const globalPool = countries.filter((c) => c.includeInQuiz);
-  return picked.map((c) => makeQuestion(c, pool, globalPool));
+  return picked.map((c) => (kind === 'capital' ? makeQuestion(c, pool, globalPool) : makeNameQuestion(kind, c, pool, globalPool)));
+}
+
+/** 旗当て・位置当ての全世界版（O-3-20＝首都以外の問い方の入口）。未正解の国を優先する。 */
+export function questionsForGlobalKind(kind: 'flag' | 'map', count = ROUND_SIZE): Question[] {
+  const globalPool = countries.filter((c) => c.includeInQuiz);
+  const ordered = prioritizeUnseen(globalPool, kind, Math.random);
+  return ordered.slice(0, Math.min(count, ordered.length)).map((c) => {
+    const regionalPool = countries.filter((o) => o.includeInQuiz && o.region === c.region);
+    return makeNameQuestion(kind, c, regionalPool, globalPool);
+  });
 }
 
 /** 指定した国IDだけを出題する（復習モード用）。誤答は各国の同地域から優先して選ぶ。
