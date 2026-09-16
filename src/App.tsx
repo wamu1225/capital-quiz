@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { BASE, getCurrentPath, href, navigate } from './lib/router';
+import { BASE, getCurrentPath, getRouteNonce, href, navigate } from './lib/router';
 import {
   questionsForRegion,
   questionsForCountryIds,
@@ -22,16 +22,20 @@ import TimeAttack from './pages/TimeAttack';
 
 function useRoute() {
   const [path, setPath] = useState(getCurrentPath());
+  const [nonce, setNonce] = useState(getRouteNonce());
   useEffect(() => {
-    const onPop = () => setPath(getCurrentPath());
+    const onPop = () => {
+      setPath(getCurrentPath());
+      setNonce(getRouteNonce());
+    };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
-  return path;
+  return { path, nonce };
 }
 
 export default function App() {
-  const path = useRoute();
+  const { path, nonce } = useRoute();
 
   const onNavClick = useCallback((e: React.MouseEvent) => {
     const target = (e.target as HTMLElement).closest('a');
@@ -82,6 +86,7 @@ export default function App() {
   } else if (path === '/review/') {
     page = (
       <Quiz
+        key={`review-${nonce}`}
         title="復習：間違えた国だけ"
         backHref="/region/"
         backLabel="地域選択に戻る"

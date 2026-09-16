@@ -7,6 +7,7 @@ import { href } from '../lib/router';
 import {
   formatTimeMs,
   getRegionBest,
+  getReviewCountryIds,
   recordCountryAnswer,
   recordDailyCompletion,
   recordRegionResult,
@@ -136,7 +137,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
           <a className="btn-secondary" href={href(backHref)}>
             {backLabel}
           </a>
-          {missed.length > 0 && (
+          {getReviewCountryIds().length > 0 && (
             <a className="btn-secondary" href={href('/review/')}>
               間違えた国を復習する
             </a>
