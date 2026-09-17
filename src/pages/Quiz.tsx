@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Question } from '../lib/quiz';
 import type { Region } from '../data/countries';
 import { GEO } from '../data/geo';
@@ -44,6 +44,24 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
   const recordedRef = useRef(false);
   const [result, setResult] = useState<{ best: RegionBest; isNewBest: boolean } | null>(null);
   const [dailyStreak, setDailyStreak] = useState<number | null>(null);
+
+  // 正解かつ解説の無い問題は、押した瞬間の演出を見せてから自動で次へ進める。
+  // 誤答・訳あり解説つきの正解は手を止めて読ませる（次へボタンのまま）。
+  // Hooks はレンダーごとに必ず同じ順で呼ぶ必要があるため、下の early return より前に置く。
+  const currentQuestion = questions[index];
+  const hasAnswered = selected !== null;
+  const answeredCorrectly = currentQuestion ? selected === currentQuestion.correctIndex : false;
+  const currentExplanation = currentQuestion ? triviaExplanations[currentQuestion.country.id] : undefined;
+  const shouldAutoAdvance = hasAnswered && answeredCorrectly && !currentExplanation && !showExplanationAlways;
+
+  useEffect(() => {
+    if (!shouldAutoAdvance) return;
+    const timer = setTimeout(() => {
+      setSelected(null);
+      setIndex((i) => i + 1);
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [shouldAutoAdvance, index]);
 
   if (questions.length === 0) {
     return (
@@ -190,11 +208,15 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
           </span>
           <span className="quiz-stat">
             <span className="quiz-stat__label">スコア</span>
-            <span className="quiz-stat__value">{score}</span>
+            <span className="quiz-stat__value" key={score}>
+              {score}
+            </span>
           </span>
-          <span className="quiz-stat">
+          <span className={streak >= 2 ? 'quiz-stat quiz-stat--hot' : 'quiz-stat'}>
             <span className="quiz-stat__label">連続正解</span>
-            <span className="quiz-stat__value">{streak}</span>
+            <span className="quiz-stat__value" key={streak}>
+              {streak}
+            </span>
           </span>
         </div>
       </div>
@@ -257,7 +279,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
           {explanation}
         </div>
       )}
-      {answered && (
+      {answered && !shouldAutoAdvance && (
         <>
           <p className="quiz-country-link">
             {q.kind === 'map' && <Flag className="quiz-question__flag" iso2={geo?.iso2} />}
