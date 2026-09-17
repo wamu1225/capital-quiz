@@ -20,14 +20,20 @@ const escAttr = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').
 export function renderWorldMapSvg(lat: number, lng: number, label?: string): string {
   const { x, y } = projectLatLng(lat, lng);
   const ariaLabel = label ? `世界地図上の${label}の位置` : '世界地図上の位置';
+  const cx = x.toFixed(1);
+  const cy = y.toFixed(1);
+  // 「直径2pxの黒点」で位置が分からない指摘（監督のペルソナレビュー）への対応。
+  // 単なる点ではなく「波紋＋照準リング＋中心点」の的（ターゲット）にして、
+  // 縮小表示でも周辺の陸地から視認できるコントラストの高い色（--marker）を使う。
   return `<svg viewBox="0 0 ${WORLD_MAP_VB_W} ${WORLD_MAP_VB_H}" role="img" aria-label="${escAttr(ariaLabel)}" class="world-map-dot">
   <rect x="0" y="0" width="${WORLD_MAP_VB_W}" height="${WORLD_MAP_VB_H}" fill="var(--map-ocean, #dbe9f4)" />
   <path d="${WORLD_LAND_PATH}" fill="var(--map-land, #b9c9b0)" stroke="var(--map-land-stroke, #94a58c)" stroke-width="0.4" />
-  <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="9" fill="var(--gold)" opacity="0.35">
-    <animate attributeName="r" values="9;15;9" dur="1.6s" repeatCount="indefinite" />
-    <animate attributeName="opacity" values="0.35;0.05;0.35" dur="1.6s" repeatCount="indefinite" />
+  <circle class="world-map-dot__pulse" cx="${cx}" cy="${cy}" r="14" fill="none" stroke="var(--marker, #d1453b)" stroke-width="2.5" opacity="0.55">
+    <animate attributeName="r" values="14;26;14" dur="1.8s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="0.55;0;0.55" dur="1.8s" repeatCount="indefinite" />
   </circle>
-  <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" fill="var(--navy-deep)" stroke="#fff" stroke-width="1.5" />
+  <circle cx="${cx}" cy="${cy}" r="9" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.9" />
+  <circle cx="${cx}" cy="${cy}" r="6.5" fill="var(--marker, #d1453b)" stroke="#fff" stroke-width="2" />
 </svg>`;
 }
 

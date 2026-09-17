@@ -245,7 +245,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
           <>
             <div className="quiz-question__label">この位置にある国は？</div>
             {geo && (
-              <div className="quiz-reveal-map">
+              <div className="quiz-reveal-map quiz-reveal-map--hero">
                 <WorldMapDot lat={geo.lat} lng={geo.lng} />
               </div>
             )}

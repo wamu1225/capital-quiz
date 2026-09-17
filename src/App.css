@@ -7,6 +7,7 @@
   --gold-soft: #e8d5ab;
   --line: #d8d0bd;
   --muted: #6b7380;
+  --marker: #d1453b;
 }
 
 /* 国旗はSVG画像で表示する（絵文字はRegional Indicator Symbolsの合字に対応しない
@@ -241,38 +242,50 @@
   }
 }
 
+/* 出題の主役（国名・国旗・地図）を「舞台」として見せるヒーローカード。
+   経緯線の格子（多重background・擬似要素なしでコンテンツより手前に来ない）で
+   地理のモチーフを出題のたびに毎回見せる（O-3-24 第2段・アートディレクター所見「主役が定まっていない」への対応）。 */
 .quiz-question {
   margin-bottom: 28px;
+  padding: 26px 22px 24px;
+  border-radius: 14px;
+  color: #fff;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 34px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 34px),
+    linear-gradient(155deg, var(--navy) 0%, var(--navy-deep) 100%);
 }
 
 .quiz-question__label {
   font-size: 0.85rem;
-  color: var(--gold);
+  color: var(--gold-soft);
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  letter-spacing: 0.03em;
 }
 
 .quiz-question__country {
-  font-size: 2rem;
+  font-size: 2.3rem;
   font-weight: 700;
-  color: var(--navy-deep);
+  color: #fff;
   line-height: 1.3;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
-.quiz-question__flag.flag-img {
-  width: 56px;
-  height: 42px;
-  border-radius: 4px;
+.quiz-question .quiz-question__flag.flag-img {
+  width: 68px;
+  height: 51px;
+  border-radius: 5px;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.35);
 }
 
 .quiz-question__flag--big.flag-img {
-  width: 160px;
-  height: 120px;
-  border-radius: 8px;
-  box-shadow: 0 0 0 1.5px var(--line);
+  width: 190px;
+  height: 142px;
+  border-radius: 9px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
 }
 
 .timeattack-clock {
@@ -308,23 +321,40 @@
   max-width: 320px;
 }
 
+/* 位置クイズ本体（未回答）の地図は「主役」として大きく見せる。
+   13歳の対象読者所見「地図の点が小さすぎてどこの国か分からない」への対応。 */
+.quiz-reveal-map--hero {
+  max-width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world-map-dot__pulse {
+    display: none;
+  }
+}
+
 .quiz-options {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
+/* 選択肢は主役（出題ヒーローカード）より弱く＝枠を薄く・字を一段小さく
+   （アートディレクター所見「国名・選択肢・スコアが同じ強さ」への対応）。 */
 .quiz-option {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   text-align: left;
-  padding: 14px 18px;
-  border: 1.5px solid var(--line);
+  padding: 13px 16px;
+  border: 1px solid var(--line);
   background: #fff;
   border-radius: 6px;
-  font-size: 1.05rem;
+  font-size: 0.98rem;
   color: var(--ink);
   transition: border-color 0.15s, background 0.15s;
 }
