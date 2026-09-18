@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Question } from '../lib/quiz';
-import type { Region } from '../data/countries';
+import { REGION_LABELS, REGION_ORDER, type Region } from '../data/countries';
 import { GEO } from '../data/geo';
 import { triviaExplanations } from '../data/trivia';
 import { href } from '../lib/router';
 import {
   formatTimeMs,
+  getAllRegionMastery,
   getRegionBest,
   getReviewCountryIds,
   recordCountryAnswer,
@@ -99,12 +100,24 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
         setDailyStreak(recordDailyCompletion(isDaily).streakDays);
       }
     }
+    const regionMastery = getAllRegionMastery();
+    const currentRegionMastery = region ? regionMastery.find((m) => m.region === region) : undefined;
+    const nextRegion = region ? REGION_ORDER[(REGION_ORDER.indexOf(region) + 1) % REGION_ORDER.length] : undefined;
+    const recommendedRegion = regionMastery
+      .filter((m) => m.region !== region)
+      .sort((a, b) => a.mastered / a.total - b.mastered / b.total)[0];
+
     return (
       <div className="quiz-result">
         <h1 className="content-h1">{title}</h1>
         <p className="quiz-result__score">
           {score} / {questions.length} 問正解
         </p>
+        {currentRegionMastery && (
+          <p className="quiz-result__best">
+            {currentRegionMastery.label}の制覇：{currentRegionMastery.mastered}/{currentRegionMastery.total}か国
+          </p>
+        )}
         {bestStreak > 1 && <p className="quiz-result__streak">最大連続正解：{bestStreak}問</p>}
         {dailyStreak !== null && <p className="quiz-result__best quiz-result__best--new">デイリーチャレンジ連続{dailyStreak}日目</p>}
         {result &&
@@ -136,18 +149,36 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
           <div className="quiz-result__missed">
             <div className="quiz-result__missed-label">間違えた国</div>
             <ul className="quiz-result__missed-list">
-              {missed.map((m) => (
-                <li key={m.country.id}>
-                  <a href={href(`/countries/${m.country.id}/`)}>
-                    <Flag className="quiz-result__missed-flag" iso2={GEO[m.country.id]?.iso2} />
-                    <span>{m.country.commonName}</span>
-                    <span className="quiz-result__missed-capital">{m.country.capital}</span>
-                  </a>
-                </li>
-              ))}
+              {missed.map((m) => {
+                const explanation = triviaExplanations[m.country.id];
+                const reason = explanation ? explanation.split('。')[0] + '。' : `${REGION_LABELS[m.country.region]}の国`;
+                return (
+                  <li key={m.country.id}>
+                    <a href={href(`/countries/${m.country.id}/`)}>
+                      <Flag className="quiz-result__missed-flag" iso2={GEO[m.country.id]?.iso2} />
+                      <span>{m.country.commonName}</span>
+                      <span className="quiz-result__missed-capital">{m.country.capital}</span>
+                    </a>
+                    <p className="quiz-result__missed-reason">{reason}</p>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
+        <div className="quiz-result__region-mastery">
+          <div className="quiz-result__missed-label">地域別の制覇率</div>
+          <ul className="quiz-result__region-mastery-list">
+            {regionMastery.map((m) => (
+              <li key={m.region}>
+                <span>{m.label}</span>
+                <span>
+                  {m.mastered}/{m.total}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
         <div className="quiz-result__actions">
           <button className="btn-primary" onClick={reset}>
             もう一度
@@ -158,6 +189,16 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
           {getReviewCountryIds().length > 0 && (
             <a className="btn-secondary" href={href('/review/')}>
               間違えた国を復習する
+            </a>
+          )}
+          {nextRegion && (
+            <a className="btn-secondary" href={href(`/region/${nextRegion}/`)}>
+              次の地域へ：{REGION_LABELS[nextRegion]}
+            </a>
+          )}
+          {recommendedRegion && recommendedRegion.region !== nextRegion && (
+            <a className="btn-secondary" href={href(`/region/${recommendedRegion.region}/`)}>
+              制覇率が低い地域：{recommendedRegion.label}（{recommendedRegion.mastered}/{recommendedRegion.total}）
             </a>
           )}
         </div>

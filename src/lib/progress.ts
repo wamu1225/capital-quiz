@@ -1,4 +1,4 @@
-import type { Region } from '../data/countries';
+import { countries, REGION_LABELS, type Region } from '../data/countries';
 
 const STORAGE_KEY = 'capital-quiz:progress:v1';
 
@@ -112,6 +112,24 @@ export function recordCountryAnswer(countryId: string, kind: QuizKind, correct: 
 export function getMasteredCount(): number {
   const data = loadProgress();
   return Object.values(data.countryStats).filter((s) => s.capital).length;
+}
+
+export interface RegionMastery {
+  region: Region;
+  label: string;
+  mastered: number;
+  total: number;
+}
+
+/** 地域ごとの制覇率（首都到達度）を一括で返す。地域選択・結果画面の両方で使う（O-3-20差し戻し分・O-3-24第3段）。 */
+export function getAllRegionMastery(): RegionMastery[] {
+  const data = loadProgress();
+  const regions = Array.from(new Set(countries.map((c) => c.region)));
+  return regions.map((region) => {
+    const regionCountries = countries.filter((c) => c.region === region && c.includeInQuiz);
+    const mastered = regionCountries.filter((c) => data.countryStats[c.id]?.capital).length;
+    return { region, label: REGION_LABELS[region], mastered, total: regionCountries.length };
+  });
 }
 
 /** 直近の解答が誤答のままの国IDリスト（復習モードの出題対象） */

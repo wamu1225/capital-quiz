@@ -550,6 +550,35 @@
   color: var(--muted);
 }
 
+.quiz-result__missed-reason {
+  margin: 0 0 8px;
+  padding: 0 4px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.quiz-result__region-mastery {
+  text-align: left;
+  max-width: 360px;
+  margin: 20px auto 0;
+}
+
+.quiz-result__region-mastery-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 16px;
+  font-size: 0.85rem;
+}
+
+.quiz-result__region-mastery-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+}
+
 .quiz-country-link {
   margin: 16px 0 0;
   font-size: 0.9rem;
@@ -570,6 +599,7 @@
 .quiz-result__actions {
   margin-top: 24px;
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   justify-content: center;
 }

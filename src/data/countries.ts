@@ -15,6 +15,9 @@ export const REGION_LABELS: Record<Region, string> = {
   oceania: 'オセアニア',
 };
 
+/** 地域一覧の表示順（大陸のまとまり優先）。地域選択・国一覧・結果画面の「次の地域」で共通に使う。 */
+export const REGION_ORDER: Region[] = ['namerica', 'latinamerica', 'europe', 'africa', 'middleeast', 'asia', 'oceania'];
+
 export type SpecialType = 'typeA' | 'typeB' | 'typeC' | null;
 // typeA=憲法上の首都と政府所在地の乖離／typeB=国際的な承認や帰属を巡る外交的解釈／typeC=遷都や改称の史的経緯
 
