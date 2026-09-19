@@ -85,15 +85,22 @@ export function getRegionBest(region: Region): RegionBest | null {
   return loadProgress().regionBests[region] ?? null;
 }
 
-/** 地域クイズの結果を記録し、自己ベストを更新したかを返す */
-export function recordRegionResult(region: Region, score: number, timeMs: number): { best: RegionBest; isNewBest: boolean } {
+/** 地域クイズの結果を記録し、自己ベストを更新したかを返す。
+ * isFirstPlay＝この地域を初めて遊んだ場合。比較対象が無いので「更新」ではなく通常表示にする
+ * （初回でも必ず「自己ベスト更新！」と出ていた見た目の違和感＝O-3-24差し戻し・監督所見への対応）。 */
+export function recordRegionResult(
+  region: Region,
+  score: number,
+  timeMs: number
+): { best: RegionBest; isNewBest: boolean; isFirstPlay: boolean } {
   const data = loadProgress();
   const prev = data.regionBests[region];
-  const isNewBest = !prev || score > prev.score || (score === prev.score && timeMs < prev.timeMs);
+  const isFirstPlay = !prev;
+  const isNewBest = isFirstPlay || score > prev.score || (score === prev.score && timeMs < prev.timeMs);
   const best: RegionBest = isNewBest ? { score, timeMs } : prev;
   data.regionBests[region] = best;
   saveProgress(data);
-  return { best, isNewBest };
+  return { best, isNewBest, isFirstPlay };
 }
 
 export function recordCountryAnswer(countryId: string, kind: QuizKind, correct: boolean): void {

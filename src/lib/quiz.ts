@@ -1,13 +1,23 @@
 import { countries, type Country, type Region } from '../data/countries';
+import { GEO } from '../data/geo';
 import { getKindCorrectIds, type QuizKind } from './progress';
 
 export type { QuizKind };
+
+export interface MapBounds {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+}
 
 export interface Question {
   kind: QuizKind;
   country: Country;
   options: string[];
   correctIndex: number;
+  /** kind==='map'のときだけ設定。選択肢4か国が収まるズーム範囲（O-3-24差し戻し対応）。 */
+  mapBounds?: MapBounds;
 }
 
 /** 1セットあたりの標準出題数（O-3-17床3＝5問程度・1分以内で終わり、即もう1回に入れる） */
@@ -65,6 +75,45 @@ export function makeQuestion(country: Country, pool: Country[], fallbackPool?: C
   return { kind: 'capital', country, options, correctIndex };
 }
 
+/** 位置クイズのズーム範囲を決める最小の緯度・経度の幅（度）。
+ * これより狭いクラスタ（太平洋の島嶼・湾岸諸国等）でも、この幅までは広げてズームする。 */
+const MIN_LAT_SPAN = 30;
+const MIN_LNG_SPAN = 45;
+/** 実際の4か国の範囲ぴったりだと端が見切れるため、余白としてこの倍率をかける。 */
+const BOUNDS_PADDING_FACTOR = 1.6;
+
+/** 選択肢4か国（正解+誤答3）がすべて収まるズーム範囲を計算する（O-3-24差し戻し対応）。
+ * 監督実測＝太平洋の島嶼・湾岸諸国など近接した小国が並ぶと、世界全図では区別できなかった。
+ * 太平洋の島嶼国は経度180°線（日付変更線）をまたぐ（例：ミクロネシア158°E・ニウエ170°W）ため、
+ * 単純なmin/maxだと「地球をほぼ一周する範囲」に誤判定する。経度を+360シフトした版とも比較し、
+ * 幅が狭い方を採用する（結果として-180〜180の範囲を超えるminLng/maxLngもありうる＝
+ * renderWorldMapSvg側で地図を3面タイル表示して対応する）。 */
+export function computeMapBounds(targets: Country[]): MapBounds | undefined {
+  const points = targets.map((c) => GEO[c.id]).filter((g): g is NonNullable<typeof g> => Boolean(g));
+  if (points.length === 0) return undefined;
+  const lats = points.map((p) => p.lat);
+  const lngsRaw = points.map((p) => p.lng);
+  const lngsShifted = lngsRaw.map((lng) => (lng < 0 ? lng + 360 : lng));
+  const rawSpan = Math.max(...lngsRaw) - Math.min(...lngsRaw);
+  const shiftedSpan = Math.max(...lngsShifted) - Math.min(...lngsShifted);
+  const lngs = shiftedSpan < rawSpan ? lngsShifted : lngsRaw;
+
+  const minLatRaw = Math.min(...lats);
+  const maxLatRaw = Math.max(...lats);
+  const minLngRaw = Math.min(...lngs);
+  const maxLngRaw = Math.max(...lngs);
+  const centerLat = (minLatRaw + maxLatRaw) / 2;
+  const centerLng = (minLngRaw + maxLngRaw) / 2;
+  const latSpan = Math.max((maxLatRaw - minLatRaw) * BOUNDS_PADDING_FACTOR, MIN_LAT_SPAN);
+  const lngSpan = Math.max((maxLngRaw - minLngRaw) * BOUNDS_PADDING_FACTOR, MIN_LNG_SPAN);
+  return {
+    minLat: Math.max(-90, centerLat - latSpan / 2),
+    maxLat: Math.min(90, centerLat + latSpan / 2),
+    minLng: centerLng - lngSpan / 2,
+    maxLng: centerLng + lngSpan / 2,
+  };
+}
+
 /**
  * 旗→国名／位置→国名の4択問題を作る（O-3-20＝問い方を増やす）。
  * 選択肢は国名（commonName）。誤答選定のロジックはmakeQuestionと同じ
@@ -91,7 +140,8 @@ export function makeNameQuestion(
   const distractors = distractorCountries.map((c) => c.commonName);
   const options = shuffle([country.commonName, ...distractors], rand);
   const correctIndex = options.indexOf(country.commonName);
-  return { kind, country, options, correctIndex };
+  const mapBounds = kind === 'map' ? computeMapBounds([country, ...distractorCountries]) : undefined;
+  return { kind, country, options, correctIndex, mapBounds };
 }
 
 /** pool の中から、指定した出題形式で未正解の国を先に、正解済みの国を後に並べる（O-3-20＝未制覇優先） */

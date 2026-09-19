@@ -12,28 +12,82 @@ export function projectLatLng(lat: number, lng: number): { x: number; y: number 
 
 const escAttr = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
+export interface MapZoomBounds {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+}
+
 /**
  * 指定した緯度経度を光る点で示す世界地図のSVGをHTML文字列として返す。
  * React（WorldMapDot.tsx）と scripts/prerender.ts の両方がこの関数を使うことで、
  * 静的HTMLとクライアント描画を単一ソース化する（figures-data.ts方式・O-3-17で新規導入）。
+ *
+ * bounds を渡すと、その緯度経度の範囲にviewBoxを絞った「ズーム地図」を描く。
+ * 太平洋の島嶼・湾岸諸国のように選択肢が近接するとき、世界全図では区別できない
+ * （監督実測・O-3-24差し戻し）ため、選択肢4か国が収まる範囲だけを拡大して見せる。
+ * ズーム時はマーカーの半径も縮小し、地図に対して肥大しすぎないようにする。
  */
-export function renderWorldMapSvg(lat: number, lng: number, label?: string): string {
-  const { x, y } = projectLatLng(lat, lng);
+/** lngを、referenceLngとの差が±180度以内になるよう360度単位でずらす。
+ * 日付変更線をまたぐズーム範囲（例：minLng=155, maxLng=205）に対して、
+ * マーカーの経度を同じ「面」に正しく投影するために使う。 */
+function unwrapLngNear(lng: number, referenceLng: number): number {
+  let candidate = lng;
+  while (candidate - referenceLng > 180) candidate -= 360;
+  while (candidate - referenceLng < -180) candidate += 360;
+  return candidate;
+}
+
+export function renderWorldMapSvg(lat: number, lng: number, label?: string, bounds?: MapZoomBounds): string {
   const ariaLabel = label ? `世界地図上の${label}の位置` : '世界地図上の位置';
+
+  let viewBox = `0 0 ${WORLD_MAP_VB_W} ${WORLD_MAP_VB_H}`;
+  let markerScale = 1;
+  let markerLng = lng;
+  if (bounds) {
+    const refLng = (bounds.minLng + bounds.maxLng) / 2;
+    markerLng = unwrapLngNear(lng, refLng);
+    const topLeft = projectLatLng(bounds.maxLat, bounds.minLng);
+    const bottomRight = projectLatLng(bounds.minLat, bounds.maxLng);
+    const vbW = bottomRight.x - topLeft.x;
+    const vbH = bottomRight.y - topLeft.y;
+    if (vbW > 0 && vbH > 0) {
+      viewBox = `${topLeft.x.toFixed(1)} ${topLeft.y.toFixed(1)} ${vbW.toFixed(1)} ${vbH.toFixed(1)}`;
+      // フルスケール比の平方根で縮小＝ズームが強いほど小さくするが、消えない下限を設ける。
+      markerScale = Math.max(0.28, Math.min(1, Math.sqrt(vbW / WORLD_MAP_VB_W)));
+    }
+  }
+  const { x, y } = projectLatLng(lat, markerLng);
   const cx = x.toFixed(1);
   const cy = y.toFixed(1);
+  const r1 = (14 * markerScale).toFixed(1);
+  const r1max = (26 * markerScale).toFixed(1);
+  const r2 = (9 * markerScale).toFixed(1);
+  const r3 = (6.5 * markerScale).toFixed(1);
+  const sw1 = (2.5 * markerScale).toFixed(2);
+  const sw2 = (1.5 * markerScale).toFixed(2);
+  const sw3 = (2 * markerScale).toFixed(2);
+
   // 「直径2pxの黒点」で位置が分からない指摘（監督のペルソナレビュー）への対応。
   // 単なる点ではなく「波紋＋照準リング＋中心点」の的（ターゲット）にして、
   // 縮小表示でも周辺の陸地から視認できるコントラストの高い色（--marker）を使う。
-  return `<svg viewBox="0 0 ${WORLD_MAP_VB_W} ${WORLD_MAP_VB_H}" role="img" aria-label="${escAttr(ariaLabel)}" class="world-map-dot">
-  <rect x="0" y="0" width="${WORLD_MAP_VB_W}" height="${WORLD_MAP_VB_H}" fill="var(--map-ocean, #dbe9f4)" />
-  <path d="${WORLD_LAND_PATH}" fill="var(--map-land, #b9c9b0)" stroke="var(--map-land-stroke, #94a58c)" stroke-width="0.4" />
-  <circle class="world-map-dot__pulse" cx="${cx}" cy="${cy}" r="14" fill="none" stroke="var(--marker, #d1453b)" stroke-width="2.5" opacity="0.55">
-    <animate attributeName="r" values="14;26;14" dur="1.8s" repeatCount="indefinite" />
+  // 陸地パスは<defs>で1回だけ定義し<use>で3面（左右に720ずつずらして）タイル表示する。
+  // 日付変更線をまたぐズーム範囲（bounds.minLng/maxLngが-180〜180を超えることがある）でも
+  // 地図が途切れないようにするため（O-3-24差し戻し対応）。
+  const landId = `wland-${cx}-${cy}`.replace(/\./g, '_');
+  return `<svg viewBox="${viewBox}" role="img" aria-label="${escAttr(ariaLabel)}" class="world-map-dot">
+  <defs><path id="${landId}" d="${WORLD_LAND_PATH}" /></defs>
+  <rect x="${-WORLD_MAP_VB_W}" y="0" width="${WORLD_MAP_VB_W * 3}" height="${WORLD_MAP_VB_H}" fill="var(--map-ocean, #dbe9f4)" />
+  <use href="#${landId}" x="${-WORLD_MAP_VB_W}" fill="var(--map-land, #b9c9b0)" stroke="var(--map-land-stroke, #94a58c)" stroke-width="0.4" />
+  <use href="#${landId}" fill="var(--map-land, #b9c9b0)" stroke="var(--map-land-stroke, #94a58c)" stroke-width="0.4" />
+  <use href="#${landId}" x="${WORLD_MAP_VB_W}" fill="var(--map-land, #b9c9b0)" stroke="var(--map-land-stroke, #94a58c)" stroke-width="0.4" />
+  <circle class="world-map-dot__pulse" cx="${cx}" cy="${cy}" r="${r1}" fill="none" stroke="var(--marker, #d1453b)" stroke-width="${sw1}" opacity="0.55">
+    <animate attributeName="r" values="${r1};${r1max};${r1}" dur="1.8s" repeatCount="indefinite" />
     <animate attributeName="opacity" values="0.55;0;0.55" dur="1.8s" repeatCount="indefinite" />
   </circle>
-  <circle cx="${cx}" cy="${cy}" r="9" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.9" />
-  <circle cx="${cx}" cy="${cy}" r="6.5" fill="var(--marker, #d1453b)" stroke="#fff" stroke-width="2" />
+  <circle cx="${cx}" cy="${cy}" r="${r2}" fill="none" stroke="#fff" stroke-width="${sw2}" opacity="0.9" />
+  <circle cx="${cx}" cy="${cy}" r="${r3}" fill="var(--marker, #d1453b)" stroke="#fff" stroke-width="${sw3}" />
 </svg>`;
 }
 

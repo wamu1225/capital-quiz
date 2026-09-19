@@ -43,7 +43,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
   const prevBest = useMemo<RegionBest | null>(() => (region ? getRegionBest(region) : null), [region]);
   const startRef = useRef(Date.now());
   const recordedRef = useRef(false);
-  const [result, setResult] = useState<{ best: RegionBest; isNewBest: boolean } | null>(null);
+  const [result, setResult] = useState<{ best: RegionBest; isNewBest: boolean; isFirstPlay: boolean } | null>(null);
   const [dailyStreak, setDailyStreak] = useState<number | null>(null);
 
   // 正解かつ解説の無い問題は、押した瞬間の演出を見せてから自動で次へ進める。
@@ -124,8 +124,8 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
           (score === 0 ? (
             <p className="quiz-result__best">次はきっと分かる。もう一度いってみよう</p>
           ) : (
-            <p className={result.isNewBest ? 'quiz-result__best quiz-result__best--new' : 'quiz-result__best'}>
-              {result.isNewBest
+            <p className={result.isNewBest && !result.isFirstPlay ? 'quiz-result__best quiz-result__best--new' : 'quiz-result__best'}>
+              {result.isNewBest && !result.isFirstPlay
                 ? `自己ベスト更新！（${result.best.score}問・${formatTimeMs(result.best.timeMs)}）`
                 : `自己ベスト：${result.best.score}問・${formatTimeMs(result.best.timeMs)}`}
             </p>
@@ -287,7 +287,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
             <div className="quiz-question__label">この位置にある国は？</div>
             {geo && (
               <div className="quiz-reveal-map quiz-reveal-map--hero">
-                <WorldMapDot lat={geo.lat} lng={geo.lng} />
+                <WorldMapDot lat={geo.lat} lng={geo.lng} bounds={q.mapBounds} />
               </div>
             )}
           </>
