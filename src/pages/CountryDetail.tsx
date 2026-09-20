@@ -3,6 +3,7 @@ import { triviaExplanations } from '../data/trivia';
 import { href } from '../lib/router';
 import { GEO } from '../data/geo';
 import { getCountryMastery } from '../lib/progress';
+import { tokyoRelation } from '../lib/geoFacts';
 import WorldMapDot from '../components/WorldMapDot';
 import Flag from '../components/Flag';
 
@@ -23,6 +24,8 @@ export default function CountryDetail({ id }: { id: string }) {
   const explanation = country.specialType ? triviaExplanations[country.id] : null;
   const geo = GEO[country.id];
   const mastery = getCountryMastery(country.id);
+  const relation = geo ? tokyoRelation(geo.lat, geo.lng) : null;
+  const regionMates = countries.filter((c) => c.region === country.region && c.id !== country.id && c.includeInQuiz);
 
   return (
     <>
@@ -59,6 +62,13 @@ export default function CountryDetail({ id }: { id: string }) {
         </div>
       )}
 
+      {relation && (
+        <p className="content-p">
+          東京から見ると、およそ<strong>{relation.direction}の方角に直線距離約{relation.distanceKm.toLocaleString('ja-JP')}km</strong>
+          （緯度経度から算出した大圏距離。実際の航空路線の距離とは異なります）。
+        </p>
+      )}
+
       {country.note && (
         <div className="quiz-explanation" style={{ marginBottom: 20 }}>
           <div className="quiz-explanation__label">補足</div>
@@ -70,6 +80,21 @@ export default function CountryDetail({ id }: { id: string }) {
         <div className="quiz-explanation" style={{ marginBottom: 20 }}>
           <div className="quiz-explanation__label">訳あり解説</div>
           {explanation}
+        </div>
+      )}
+
+      {regionMates.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: '0.85rem', color: '#6b7380', fontWeight: 700, marginBottom: 6 }}>
+            {REGION_LABELS[country.region]}の他の国
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>
+            {regionMates.map((c) => (
+              <a key={c.id} href={href(`/countries/${c.id}/`)} style={{ whiteSpace: 'nowrap' }}>
+                {c.commonName}
+              </a>
+            ))}
+          </div>
         </div>
       )}
 
