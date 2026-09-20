@@ -57,10 +57,13 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
 
   useEffect(() => {
     if (!shouldAutoAdvance) return;
+    // 700msは「○正解」の記号は見えても、正解の語を読んで国名と結びつける時間が
+    // 無かった（監督が50ms刻みで実測・O-3-24差し戻し）。完了条件の最低1.5秒に
+    // 対し、monkey.cjsの50ms刻みサンプリングの誤差を見込んで1.6秒に設定。
     const timer = setTimeout(() => {
       setSelected(null);
       setIndex((i) => i + 1);
-    }, 700);
+    }, 1600);
     return () => clearTimeout(timer);
   }, [shouldAutoAdvance, index]);
 
