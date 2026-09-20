@@ -7,6 +7,7 @@ import { countries, REGION_LABELS, type Region } from '../src/data/countries';
 import { triviaExplanations } from '../src/data/trivia';
 import { ABOUT_CONTENT, PRIVACY_CONTENT, SITE_NAME } from '../src/data/static-pages';
 import { GEO } from '../src/data/geo';
+import { tokyoRelation } from '../src/lib/geoFacts';
 
 const flagImg = (iso2: string | undefined, style = 'margin-right:10px;vertical-align:middle') =>
   iso2 ? `<img class="flag-img" src="${BASE}/flags/${iso2.toLowerCase()}.svg" alt="" width="28" height="21" style="${style}" />` : '';
@@ -269,6 +270,8 @@ console.log('✓ /countries/');
 for (const c of countries) {
   const explanation = c.specialType ? triviaExplanations[c.id] : null;
   const geo = GEO[c.id];
+  const relation = geo ? tokyoRelation(geo.lat, geo.lng) : null;
+  const regionMates = countries.filter((m) => m.region === c.region && m.id !== c.id && m.includeInQuiz);
   const desc = `${c.commonName}の首都は${c.capital}。外務省の公表情報にもとづく基本情報${explanation ? 'と、首都をめぐる背景の解説' : ''}です。`;
   const body = `<article style="${shellStyle}">
     <p style="font-size:0.85rem;color:#6b7380;margin-bottom:8px"><a href="${BASE}/countries/" style="color:#6b7380">国と首都の一覧</a>／${esc(REGION_LABELS[c.region])}</p>
@@ -279,8 +282,15 @@ for (const c of countries) {
       <div style="font-size:1.6rem;font-weight:700;color:#16324a">${esc(c.capital)}</div>
     </div>
     ${geo ? `<div style="max-width:360px;margin-bottom:20px">${renderWorldMapSvg(geo.lat, geo.lng, c.commonName)}</div>` : ''}
+    ${relation ? `<p>東京から見ると、およそ<strong>${relation.direction}の方角に直線距離約${relation.distanceKm.toLocaleString('ja-JP')}km</strong>（緯度経度から算出した大圏距離。実際の航空路線の距離とは異なります）。</p>` : ''}
     ${c.note ? `<p style="background:#f3ede0;padding:14px 16px;border-radius:6px;margin-bottom:16px">補足：${esc(c.note)}</p>` : ''}
     ${explanation ? `<p style="background:#f3ede0;padding:14px 16px;border-radius:6px;margin-bottom:16px">訳あり解説：${esc(explanation)}</p>` : ''}
+    ${regionMates.length > 0 ? `<div style="margin-bottom:20px">
+      <div style="font-size:0.85rem;color:#6b7380;font-weight:700;margin-bottom:6px">${esc(REGION_LABELS[c.region])}の他の国</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px 14px">
+        ${regionMates.map((m) => `<a href="${BASE}/countries/${m.id}/" style="white-space:nowrap;color:#16324a">${esc(m.commonName)}</a>`).join('\n        ')}
+      </div>
+    </div>` : ''}
     <p>出典：<a href="${esc(c.mofaUrl)}" style="color:#16324a">外務省の公表情報</a></p>
     <p style="margin-top:20px"><a href="${BASE}/region/${c.region}/" style="color:#16324a">${esc(REGION_LABELS[c.region])}のクイズに挑戦する</a></p>
     ${footerNav}
