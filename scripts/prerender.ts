@@ -3,6 +3,7 @@
 // 実行: npx tsx scripts/prerender.ts（npm run predeploy 内）
 import * as fs from 'fs';
 import * as path from 'path';
+import { execSync } from 'child_process';
 import { countries, REGION_LABELS, type Region } from '../src/data/countries';
 import { triviaExplanations } from '../src/data/trivia';
 import { ABOUT_CONTENT, PRIVACY_CONTENT, SITE_NAME } from '../src/data/static-pages';
@@ -357,25 +358,49 @@ for (const [slug, title, desc] of [
 console.log('✓ /flags/ /map/ /timeattack/');
 
 // ── sitemap.xml ──
+// lastmod はページごとの最終更新日（2026-11-07 監督）。全 URL をビルドした日にすると、どのページが変わったかが Google に伝わらない。
+// データの1件ごとのページは、データファイルのその id の行を git blame して いちばん新しいコミットの日。git が使えなければ今日に戻す
 const today = new Date().toISOString().split('T')[0];
+const lastCommitDay = (files: string[]): string => {
+  try { return execSync(`git log -1 --format=%cs -- ${files.join(' ')}`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim() || today; } catch { return today; }
+};
+const blameIdDays = (file: string, ids: string[]): Map<string, string> => {
+  const out = new Map<string, string>();
+  try {
+    const src = fs.readFileSync(path.resolve(process.cwd(), file), 'utf8').split('\n');
+    const lines = execSync(`git blame --line-porcelain ${file}`, { maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'ignore'] }).toString().split('\n');
+    const times: number[] = []; let cur = 0;
+    for (const l of lines) { if (l.startsWith('committer-time ')) cur = Number(l.slice(15)); else if (l.startsWith('\t')) times.push(cur); }
+    const starts = ids.map((id) => src.findIndex((l) => l.startsWith(`    id: '${id}',`)));
+    ids.forEach((id, k) => {
+      const a = starts[k]; if (a < 0) return;
+      const b = starts.filter((x) => x > a).sort((x, y) => x - y)[0] ?? src.length;
+      const t = Math.max(...times.slice(a, b));
+      if (t > 0) out.set(id, new Date(t * 1000).toISOString().split('T')[0]);
+    });
+  } catch { /* git が無ければ今日 */ }
+  return out;
+};
+const cDay = blameIdDays('src/data/countries.ts', countries.map((c) => c.id));
+const siteDay = lastCommitDay(['src', 'scripts/prerender.ts']);
 const urls = [
-  { loc: `${BASE_URL}/`, priority: '1.0' },
-  { loc: `${BASE_URL}/region/`, priority: '0.8' },
-  ...REGION_ORDER.map((r) => ({ loc: `${BASE_URL}/region/${r}/`, priority: '0.7' })),
-  { loc: `${BASE_URL}/trivia/`, priority: '0.8' },
-  { loc: `${BASE_URL}/daily/`, priority: '0.6' },
-  { loc: `${BASE_URL}/review/`, priority: '0.3' },
-  { loc: `${BASE_URL}/flags/`, priority: '0.7' },
-  { loc: `${BASE_URL}/map/`, priority: '0.7' },
-  { loc: `${BASE_URL}/timeattack/`, priority: '0.7' },
-  { loc: `${BASE_URL}/countries/`, priority: '0.8' },
-  ...countries.map((c) => ({ loc: `${BASE_URL}/countries/${c.id}/`, priority: '0.5' })),
-  { loc: `${BASE_URL}/about/`, priority: '0.3' },
-  { loc: `${BASE_URL}/privacy/`, priority: '0.2' },
+  { loc: `${BASE_URL}/`, priority: '1.0', lastmod: siteDay },
+  { loc: `${BASE_URL}/region/`, priority: '0.8', lastmod: siteDay },
+  ...REGION_ORDER.map((r) => ({ loc: `${BASE_URL}/region/${r}/`, priority: '0.7', lastmod: siteDay })),
+  { loc: `${BASE_URL}/trivia/`, priority: '0.8', lastmod: siteDay },
+  { loc: `${BASE_URL}/daily/`, priority: '0.6', lastmod: siteDay },
+  { loc: `${BASE_URL}/review/`, priority: '0.3', lastmod: siteDay },
+  { loc: `${BASE_URL}/flags/`, priority: '0.7', lastmod: siteDay },
+  { loc: `${BASE_URL}/map/`, priority: '0.7', lastmod: siteDay },
+  { loc: `${BASE_URL}/timeattack/`, priority: '0.7', lastmod: siteDay },
+  { loc: `${BASE_URL}/countries/`, priority: '0.8', lastmod: siteDay },
+  ...countries.map((c) => ({ loc: `${BASE_URL}/countries/${c.id}/`, priority: '0.5', lastmod: cDay.get(c.id) ?? siteDay })),
+  { loc: `${BASE_URL}/about/`, priority: '0.3', lastmod: siteDay },
+  { loc: `${BASE_URL}/privacy/`, priority: '0.2', lastmod: siteDay },
 ];
 const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((u) => `  <url><loc>${u.loc}</loc><lastmod>${today}</lastmod><priority>${u.priority}</priority></url>`).join('\n')}
+${urls.map((u) => `  <url><loc>${u.loc}</loc><lastmod>${u.lastmod}</lastmod><priority>${u.priority}</priority></url>`).join('\n')}
 </urlset>`;
 fs.writeFileSync(path.join(DIST_DIR, 'sitemap.xml'), sitemapXml);
 console.log(`✓ sitemap.xml（全${urls.length}URL）`);
