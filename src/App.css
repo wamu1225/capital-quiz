@@ -4,6 +4,7 @@
   --navy: #16324a;
   --navy-deep: #0e2233;
   --gold: #c9963c;
+  --gold-text: #7d611c; /* 字に使うときの濃い色（コントラスト 4.5:1 以上・2026-11-07） */
   --gold-soft: #e8d5ab;
   --line: #d8d0bd;
   --muted: #6b7380;
@@ -217,7 +218,7 @@
 
 .quiz-stat--hot .quiz-stat__label,
 .quiz-stat--hot .quiz-stat__value {
-  color: var(--gold);
+  color: var(--gold-text);
 }
 
 .quiz-stat--hot {
@@ -494,7 +495,7 @@
 }
 
 .quiz-result__best--new {
-  color: var(--gold);
+  color: var(--gold-text);
   font-weight: 700;
 }
 
@@ -656,7 +657,7 @@
 
 .region-list__best {
   font-size: 0.75rem;
-  color: var(--gold);
+  color: var(--gold-text);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -678,7 +679,7 @@
 .ref-region-group__title {
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--gold);
+  color: var(--gold-text);
   letter-spacing: 0.08em;
   border-bottom: 1px solid var(--navy);
   padding-bottom: 6px;
@@ -699,7 +700,7 @@
 
 .ref-row__badge {
   font-size: 0.7rem;
-  color: var(--gold);
+  color: var(--gold-text);
   border: 1px solid var(--gold);
   border-radius: 3px;
   padding: 1px 6px;
