@@ -16,7 +16,7 @@ import {
 } from '../lib/progress';
 import WorldMapDot from '../components/WorldMapDot';
 import WorldMapMulti from '../components/WorldMapMulti';
-import Flag from '../components/Flag';
+import Flag, { preloadFlag } from '../components/Flag';
 
 interface QuizProps {
   title: string;
@@ -54,6 +54,12 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
   const answeredCorrectly = currentQuestion ? selected === currentQuestion.correctIndex : false;
   const currentExplanation = currentQuestion ? triviaExplanations[currentQuestion.country.id] : undefined;
   const shouldAutoAdvance = hasAnswered && answeredCorrectly && !currentExplanation && !showExplanationAlways;
+
+  // 次の問題の国旗を、いまの問題を出しているあいだに読み込んでおく
+  useEffect(() => {
+    const nextQ = questions[index + 1];
+    if (nextQ) preloadFlag(GEO[nextQ.country.id]?.iso2);
+  }, [questions, index]);
 
   useEffect(() => {
     if (!shouldAutoAdvance) return;
