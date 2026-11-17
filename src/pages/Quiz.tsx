@@ -160,7 +160,8 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
             <ul className="quiz-result__missed-list">
               {missed.map((m) => {
                 const explanation = triviaExplanations[m.country.id];
-                const reason = explanation ? explanation.split('。')[0] + '。' : `${REGION_LABELS[m.country.region]}の国`;
+                // 地域別クイズで「アフリカの国」と出しても情報が無い（O-3-24 監督所見）。解説かメモがある国だけ理由を出す
+                const reason = explanation ? explanation.split('。')[0] + '。' : m.country.note;
                 return (
                   <li key={m.country.id}>
                     <a href={href(`/countries/${m.country.id}/`)}>
@@ -168,7 +169,7 @@ export default function Quiz({ title, backHref, backLabel, buildQuestions, showE
                       <span>{m.country.commonName}</span>
                       <span className="quiz-result__missed-capital">{m.country.capital}</span>
                     </a>
-                    <p className="quiz-result__missed-reason">{reason}</p>
+                    {reason && <p className="quiz-result__missed-reason">{reason}</p>}
                   </li>
                 );
               })}
